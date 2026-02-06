@@ -1,0 +1,19 @@
+# Ignora le librerie pesanti
+**/node_modules/
+
+# Ignora i file di build e compilazione
+**/build/
+**/dist/
+
+# Ignora file di sistema, log e chiavi
+.DS_Store
+*.log
+.env
+
+# Ignora la cartella dei backup vecchi
+**/Old/
+
+# Ignora la cartella Git
+**/Git/
+
+*.exe
