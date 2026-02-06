@@ -10,5 +10,11 @@
     "password": "123",
     "name": "Martina",
     "mnemonic": "scale original hero check alien damp trip guard absorb summer bird tuna"
+  },
+  {
+    "email": "tizio@gmail.com",
+    "password": "123",
+    "name": "tizio",
+    "mnemonic": "romeo tango quebec echo sierra quebec echo foxtrot echo tango quebec whiskey"
   }
 ]

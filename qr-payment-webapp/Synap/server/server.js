@@ -23,12 +23,13 @@ const EXPLORER_URL = 'https://explorer.rebased.iota.org/txblock/';
 const MNEMONIC_BUS = "eternal clutch lock tunnel carpet dial repair popular exist monkey turkey bubble";
 
 // --- CONFIGURAZIONE COSTI ---
-const activeTrips = {}; // Memoria RAM dei viaggi (ID -> Timestamp Inizio)
-const COSTO_AL_SECONDO = 0.01; // 1 centesimo di IOTA al secondo
+const activeTrips = {}; 
+const COSTO_AL_SECONDO = 0.01; 
 
 let client = null;
 let busKeypair = null;
 
+// --- UTILITY DATABASE ---
 function loadUsers() {
     try {
         const data = fs.readFileSync(path.join(__dirname, 'users.json'), 'utf8');
@@ -36,6 +37,20 @@ function loadUsers() {
     } catch (e) {
         return [];
     }
+}
+
+function saveUsers(users) {
+    fs.writeFileSync(path.join(__dirname, 'users.json'), JSON.stringify(users, null, 2));
+}
+
+// GENERATORE MNEMONIC SIMULATO (Per demo)
+function generateMockMnemonic() {
+    const words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet", "kilo", "lima", "mike", "november", "oscar", "papa", "quebec", "romeo", "sierra", "tango", "uniform", "victor", "whiskey", "xray"];
+    let mnemonic = [];
+    for(let i=0; i<12; i++) {
+        mnemonic.push(words[Math.floor(Math.random() * words.length)]);
+    }
+    return mnemonic.join(" ");
 }
 
 async function init() {
@@ -53,6 +68,45 @@ init();
 
 // --- API ---
 
+// 1. REGISTRAZIONE (NUOVA)
+app.post('/api/auth/register', (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: "Tutti i campi sono obbligatori" });
+        }
+
+        const users = loadUsers();
+
+        // Controlla duplicati
+        if (users.find(u => u.email === email)) {
+            return res.status(400).json({ error: "Email già registrata" });
+        }
+
+        // Genera wallet
+        const newMnemonic = generateMockMnemonic();
+        
+        const newUser = {
+            email,
+            password, 
+            name,
+            mnemonic: newMnemonic
+        };
+
+        users.push(newUser);
+        saveUsers(users);
+
+        console.log(`🆕 Registrato: ${name} (${email})`);
+        res.json({ ok: true, message: "Registrazione completata!" });
+
+    } catch (e) {
+        console.error("Errore registrazione:", e);
+        res.status(500).json({ error: "Errore interno server" });
+    }
+});
+
+// 2. LOGIN
 app.post('/api/auth/login', (req, res) => {
     const { email, password } = req.body;
     const users = loadUsers();
@@ -71,44 +125,38 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
-// 1. INIZIO VIAGGIO (Salviamo l'ora esatta)
+// 3. INIZIO VIAGGIO
 app.post('/api/trip/start', (req, res) => {
     const tripId = "TRIP-" + Date.now();
-    
-    // MEMORIZZIAMO QUANDO È INIZIATO IL VIAGGIO
     activeTrips[tripId] = Date.now();
-    
     console.log(`⏱️ Start Viaggio: ${tripId} alle ${new Date().toLocaleTimeString()}`);
     res.json({ tripId: tripId, status: "STARTED" });
 });
 
-// 2. FINE VIAGGIO (Calcolo Costo Reale)
+// 4. FINE VIAGGIO
 app.post('/api/trip/end', async (req, res) => {
     try {
         const { email, tripId } = req.body; 
         
-        // RECUPERO TEMPO
         const startTime = activeTrips[tripId];
         let durationSeconds = 0;
         
         if (startTime) {
             const endTime = Date.now();
             durationSeconds = Math.floor((endTime - startTime) / 1000);
-            delete activeTrips[tripId]; // Puliamo la memoria
+            delete activeTrips[tripId];
         } else {
-            console.log("⚠️ Viaggio non trovato (restart server?), uso durata default.");
+            console.log("⚠️ Viaggio non trovato, uso default.");
             durationSeconds = 10; 
         }
 
-        // CALCOLO COSTO
         let costAmount = durationSeconds * COSTO_AL_SECONDO;
-        costAmount = Math.round(costAmount * 100) / 100; // Arrotonda a 2 decimali
-        if (costAmount < 0.01) costAmount = 0.01; // Minimo sindacale
+        costAmount = Math.round(costAmount * 100) / 100; 
+        if (costAmount < 0.01) costAmount = 0.01; 
 
         console.log(`\n💸 Pagamento da: ${email}`);
         console.log(`⏱️ Durata: ${durationSeconds}s | Costo: ${costAmount} IOTA`);
 
-        // GESTIONE PAGAMENTO
         const users = loadUsers();
         const payingUser = users.find(u => u.email === email);
         if (!payingUser) throw new Error("Utente non trovato");
@@ -116,20 +164,16 @@ app.post('/api/trip/end', async (req, res) => {
         const userKeypair = Ed25519Keypair.deriveKeypair(payingUser.mnemonic);
         const userAddress = userKeypair.getPublicKey().toIotaAddress();
 
-        // Controllo fondi
         const balances = await client.getAllBalances({ owner: userAddress });
         const totalNanoIota = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
         
-        // Conversione IOTA -> NanoIOTA
         const costInNano = Math.floor(costAmount * 1_000_000_000);
 
         if (totalNanoIota < costInNano) {
              console.log("⚠️ Saldo basso, transazione a rischio...");
         }
 
-        // TRANSAZIONE
         const tx = new Transaction();
-        // Usiamo l'importo calcolato (costInNano), non più fisso!
         const [moneta] = tx.splitCoins(tx.gas, [costInNano]); 
         tx.transferObjects([moneta], busKeypair.getPublicKey().toIotaAddress());
 
@@ -153,6 +197,7 @@ app.post('/api/trip/end', async (req, res) => {
     }
 });
 
+// 5. SALDO
 app.post('/api/user/balance', async (req, res) => {
     try {
         const { email } = req.body;

@@ -14,6 +14,7 @@ let tripStartTime = null;
 
 const views = {
     login: document.getElementById('view-login'),
+    register: document.getElementById('view-register'),
     home: document.getElementById('view-home'),
     scan: document.getElementById('view-scan'),
     trip: document.getElementById('view-trip'),
@@ -29,7 +30,7 @@ function showView(viewName) {
 }
 
 // ==========================================
-//           LOGIN
+//           LOGIN & REGISTER
 // ==========================================
 async function handleLogin(event) {
     event.preventDefault();
@@ -56,12 +57,47 @@ async function handleLogin(event) {
             currentUser = data.user;
             updateUIProfile();
             showView('home');
-            refreshBalance(); // Refresh all'avvio
+            refreshBalance();
         } else {
             alert(data.error || "Errore Login");
         }
     } catch (e) { alert("Errore connessione server"); }
     finally { btn.innerText = originalText; btn.disabled = false; }
+}
+
+async function handleRegister(event) {
+    event.preventDefault();
+    const btn = document.querySelector('#register-form button');
+    const originalText = btn.innerText;
+    btn.innerText = "Creazione...";
+    btn.disabled = true;
+
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        });
+        
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("✅ Registrazione completata! Ora puoi fare il login.");
+            showView('login');
+            document.getElementById('register-form').reset();
+        } else {
+            alert("❌ Errore: " + data.error);
+        }
+    } catch (e) {
+        alert("Errore di connessione al server");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
 }
 
 function handleLogout() {
@@ -151,7 +187,6 @@ function startTripTimer() {
     const timerEl = document.getElementById('trip-timer');
     const costEl = document.getElementById('trip-cost');
     
-    // Controllo sicurezza
     if(!timerEl || !costEl) {
         console.error("Elementi timer non trovati nel DOM!");
         return;
@@ -160,17 +195,14 @@ function startTripTimer() {
     timerEl.innerText = "00:00";
     costEl.innerText = "0.00";
 
-    // Aggiorna ogni secondo
     tripInterval = setInterval(() => {
         const now = Date.now();
         const diffInSeconds = Math.floor((now - tripStartTime) / 1000);
         
-        // 1. Tempo
         const minutes = Math.floor(diffInSeconds / 60).toString().padStart(2, '0');
         const seconds = (diffInSeconds % 60).toString().padStart(2, '0');
         timerEl.innerText = `${minutes}:${seconds}`;
 
-        // 2. Costo Visivo (0.01 IOTA al secondo)
         const currentCost = (diffInSeconds * 0.01);
         costEl.innerText = currentCost.toFixed(2);
 
@@ -196,15 +228,13 @@ async function startTrip(qrData) {
             currentTripId = data.tripId;
             showView('trip');
             document.getElementById('trip-id-display').innerText = qrData;
-            
-            // AVVIA IL TIMER
             startTripTimer();
         }
     } catch (e) { alert("Errore avvio viaggio"); showView('home'); }
 }
 
 async function endTrip(qrData) {
-    stopTripTimer(); // Ferma il timer visivo
+    stopTripTimer(); 
     
     showView('result');
     const box = document.querySelector('.ticket');
@@ -225,10 +255,8 @@ async function endTrip(qrData) {
                 <h2 style="color:var(--primary)">Pagato!</h2>
                 <p class="balance">-${data.cost} <small>IOTA</small></p>
                 <a href="${data.explorerUrl}" target="_blank" class="btn secondary">Ricevuta Blockchain</a>
-                
                 <button onclick="resetAppAndHome()" class="btn primary" style="margin-top:10px">Nuovo Viaggio</button>
             `;
-            // Aggiorna subito il saldo nella home (in background)
             refreshBalance();
         } else { throw new Error(data.error); }
     } catch (e) {
@@ -262,15 +290,9 @@ async function refreshBalance() {
     }
 }
 
-// NUOVA FUNZIONE DI RESET
 function resetAppAndHome() {
-    // 1. Torna alla Home
     showView('home');
-    
-    // 2. Forza l'aggiornamento del saldo
     refreshBalance();
-    
-    // 3. Resetta variabili di stato
     currentTripId = null;
     scanMode = 'START';
 }
@@ -286,6 +308,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showView('login');
     }
-    const form = document.getElementById('login-form');
-    if(form) form.addEventListener('submit', handleLogin);
+    
+    const loginForm = document.getElementById('login-form');
+    if(loginForm) loginForm.addEventListener('submit', handleLogin);
+
+    const registerForm = document.getElementById('register-form');
+    if(registerForm) registerForm.addEventListener('submit', handleRegister);
 });

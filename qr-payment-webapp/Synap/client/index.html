@@ -28,6 +28,29 @@
                     <input type="password" id="password" placeholder="Password" required>
                     <button type="submit" class="btn primary">Accedi</button>
                 </form>
+                
+                <div style="margin-top: 20px;">
+                    <p>Non hai un account?</p>
+                    <button onclick="showView('register')" class="link">Crea un account</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-register" class="view">
+            <div class="card">
+                <h1>Crea Account</h1>
+                <p class="status-text">Unisciti a Synap</p>
+                <form id="register-form">
+                    <input type="text" id="reg-name" placeholder="Il tuo Nome" required>
+                    <input type="email" id="reg-email" placeholder="Email" required>
+                    <input type="password" id="reg-password" placeholder="Password" required>
+                    
+                    <button type="submit" class="btn primary">Registrati</button>
+                </form>
+                
+                <button onclick="showView('login')" class="link" style="margin-top: 15px;">
+                    Torna al Login
+                </button>
             </div>
         </section>
 
