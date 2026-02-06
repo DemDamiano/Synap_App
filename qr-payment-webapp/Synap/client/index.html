@@ -1,69 +1,88 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Synap  Demo - IOTA Payments</title>
-
-  <link rel="stylesheet" href="/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js" defer></script>
-  <script src="/app.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Synap App</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">i <span class="accent">Synap </span></div>
-  </header>
 
-  <section id="view-login" class="view active">
-    <h1>Accedi al tuo account</h1>
-    <form id="login-form" class="card">
-      <label>Email</label>
-      <input type="email" id="email" placeholder="email@esempio.com" required />
-      <label>Password</label>
-      <input type="password" id="password" placeholder="••••••••" required />
-      <button type="submit" class="btn primary">ACCEDI</button>
-    </form>
-  </section>
+    <header class="topbar">
+        <div class="brand">Synap</div>
+        <div class="user-profile">
+            <span class="user-name">...</span>
+            <button onclick="handleLogout()" class="btn-logout">Esci</button>
+        </div>
+    </header>
 
-  <section id="view-scan" class="view">
-    <div class="back-row"><button class="link" onclick="location.reload()">← Esci</button></div>
-    <h2>Check-in: Sali sul Bus</h2>
-    <video id="qr-video" class="qr-box" autoplay playsinline></video>
-    <div id="scan-status" class="hint">Inquadra QR (IN-...)</div>
-    
-    <div class="manual-entry">
-      <input id="manual-code" placeholder="Es. BUS01 (Auto IN-)" />
-      <button class="btn" id="manual-btn">Conferma Entrata</button>
-    </div>
-  </section>
+    <main>
+        <section id="view-login" class="view active">
+            <div class="card">
+                <h1>Benvenuto</h1>
+                <p class="status-text">Entra nel futuro dei trasporti</p>
+                <form id="login-form">
+                    <input type="email" id="email" placeholder="Email" required>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button type="submit" class="btn primary">Accedi</button>
+                </form>
+            </div>
+        </section>
 
-  <section id="view-monitor" class="view">
-    <h2>In Viaggio...</h2>
-    <div class="bus"></div> <div class="stats">
-      <div class="stat">
-        <div class="label">Chilometri</div>
-        <div class="val"><span id="km">0.000</span> <small>KM</small></div>
-      </div>
-      <div class="stat">
-        <div class="label">Totale</div>
-        <div class="val"><span id="eur">0.00</span> <small>€</small></div>
-      </div>
-    </div>
-    <button class="btn primary big" id="end-trip">TERMINA CORSA</button>
-  </section>
+        <section id="view-home" class="view">
+            <div class="card">
+                <p class="status-text">Il tuo saldo disponibile</p>
+                <div class="balance">
+                    <span id="balance-amount">10.00</span> 
+                    <span class="currency">IOTA</span>
+                </div>
+            </div>
+            
+            <button onclick="startScanner('START')" class="btn primary">📷 Inizia Viaggio (IN)</button>
+        </section>
 
-  <section id="view-finish-scan" class="view">
-    <h2>Check-out: Scendi dal Bus</h2>
-    <video id="qr-video-finish" class="qr-box" autoplay playsinline></video>
-    <div id="finish-status" class="hint">Inquadra QR (OUT-...)</div>
-    
-    <div class="manual-entry">
-      <input id="manual-code-finish" placeholder="Es. BUS01 (Auto OUT-)" />
-      <button class="btn" id="manual-btn-finish">Paga e Scendi</button>
-    </div>
-    
-    <button class="btn danger" id="cancel-finish">ANNULLA (Torna al monitor)</button>
-  </section>
+        <section id="view-scan" class="view">
+            <h2 style="margin-bottom: 20px;">Scansiona QR</h2>
+            
+            <div id="reader"></div> 
+            
+            <div class="card">
+                <p class="status-text">Oppure inserisci codice</p>
+                <input type="text" id="manual-code-input" placeholder="Es. IN-BUS-01">
+                <button onclick="handleManualEntry()" class="btn secondary">Conferma Manuale</button>
+                <button onclick="showView('home')" class="btn link" style="margin-top:10px">Annulla</button>
+            </div>
+        </section>
+
+        <section id="view-trip" class="view">
+            <div class="card pulsate">
+                <div style="font-size: 50px;">🚌</div>
+                <h2>In Viaggio</h2>
+                <p class="status-text">Veicolo: <strong id="trip-id-display">--</strong></p>
+                
+                <div class="live-stats" style="margin: 20px 0;">
+                    <div id="trip-timer" class="timer">00:00</div>
+                    <p style="font-size: 1.2rem; color: #8E8E93;">
+                        Stima: <strong id="trip-cost" style="color: var(--primary);">0.00</strong> IOTA
+                    </p>
+                </div>
+            </div>
+
+            <div style="width: 100%; margin-top: auto;">
+                <button onclick="startScanner('END')" class="btn danger">SCENDI E PAGA (OUT)</button>
+                
+                <button onclick="endTrip('OUT-DEBUG-FORCE')" class="link" style="color: #999; margin-top: 20px;">
+                    (Debug) Forza Fine Corsa
+                </button>
+            </div>
+        </section>
+
+        <section id="view-result" class="view">
+            <div class="ticket card"></div>
+        </section>
+    </main>
 
 </body>
 </html>

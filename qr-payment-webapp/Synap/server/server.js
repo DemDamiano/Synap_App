@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs'; 
 import { fileURLToPath } from 'url';
 import { IotaClient } from '@iota/iota-sdk/client';
 import { Ed25519Keypair } from '@iota/iota-sdk/keypairs/ed25519';
@@ -13,119 +14,166 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(cors());
 app.use(express.json());
-// Serviamo il Client (Il Passeggero)
 app.use(express.static(path.join(__dirname, '../client')));
 
 const PORT = 3000;
 const NODE_URL = 'https://api.testnet.iota.cafe'; 
 const EXPLORER_URL = 'https://explorer.rebased.iota.org/txblock/';
 
-// --- I DUE ATTORI ---
-
-// 1. IL BUS (IL SERVER - RICEVE I SOLDI)
-// Usa la tua frase originale (quella che ha già i fondi per il gas)
 const MNEMONIC_BUS = "eternal clutch lock tunnel carpet dial repair popular exist monkey turkey bubble";
 
-// 2. IL PASSEGGERO (IL CLIENT - PAGA IL BIGLIETTO)
-// Questa è la frase del passeggero. Deve avere fondi per pagare!
-const MNEMONIC_PASSENGER = "organ screen story car during scavenge rigid box confirm old huge wealth";
+// --- CONFIGURAZIONE COSTI ---
+const activeTrips = {}; // Memoria RAM dei viaggi (ID -> Timestamp Inizio)
+const COSTO_AL_SECONDO = 0.01; // 1 centesimo di IOTA al secondo
 
 let client = null;
-let busKeypair = null;      // Il Wallet del Bus
-let passengerKeypair = null; // Il Wallet del Passeggero
+let busKeypair = null;
+
+function loadUsers() {
+    try {
+        const data = fs.readFileSync(path.join(__dirname, 'users.json'), 'utf8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
 
 async function init() {
     console.log("-----------------------------------------");
-    console.log("🚌 AVVIO SERVER (IL BUS)");
+    console.log("🏦 SERVER BANCA AVVIATO (DYNAMIC PRICING)");
     console.log("-----------------------------------------");
 
-    try {
-        client = new IotaClient({ url: NODE_URL });
-
-        // Carichiamo i due attori
-        busKeypair = Ed25519Keypair.deriveKeypair(MNEMONIC_BUS);
-        passengerKeypair = Ed25519Keypair.deriveKeypair(MNEMONIC_PASSENGER);
-
-        const busAddress = busKeypair.getPublicKey().toIotaAddress();
-        const passengerAddress = passengerKeypair.getPublicKey().toIotaAddress();
-
-        console.log(`👮 AUTISTA (IO):      ${busAddress}`); // Il Server
-        console.log(`🧍 PASSEGGERO (LUI):  ${passengerAddress}`); // Il Client
-
-        // Controlliamo se il Passeggero ha i soldi per pagare
-        const balances = await client.getAllBalances({ owner: passengerAddress });
-        const totalBalance = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
-        
-        console.log(`💰 Saldo Passeggero:  ${totalBalance / 1_000_000_000} IOTA`);
-
-        if (totalBalance < 1000000000) {
-            console.warn("⚠️  ATTENZIONE: Il passeggero è povero! Esegui il comando faucet qui sotto:");
-            console.log(`iota client faucet --address ${passengerAddress}`);
-        } else {
-            console.log("✅ Il Passeggero ha i fondi. Pronto a incassare.");
-        }
-
-    } catch (e) {
-        console.error("❌ ERRORE AVVIO:", e);
-    }
+    client = new IotaClient({ url: NODE_URL });
+    busKeypair = Ed25519Keypair.deriveKeypair(MNEMONIC_BUS);
+    
+    console.log(`👮 CONTO AZIENDA (Bus): ${busKeypair.getPublicKey().toIotaAddress()}`);
 }
 
 init();
 
 // --- API ---
 
-// Login fittizio
 app.post('/api/auth/login', (req, res) => {
-    res.json({ token: "token-passeggero", user: "Mario Rossi" });
+    const { email, password } = req.body;
+    const users = loadUsers();
+    
+    const user = users.find(u => u.email === email && u.password === password);
+
+    if (user) {
+        console.log(`🔑 Login: ${user.name}`);
+        res.json({ 
+            token: "token-" + Date.now(), 
+            user: user.name,
+            email: user.email 
+        });
+    } else {
+        res.status(401).json({ error: "Email o password errati" });
+    }
 });
 
-// Inizio corsa
+// 1. INIZIO VIAGGIO (Salviamo l'ora esatta)
 app.post('/api/trip/start', (req, res) => {
-    res.json({ tripId: "TRIP-" + Date.now(), status: "STARTED" });
+    const tripId = "TRIP-" + Date.now();
+    
+    // MEMORIZZIAMO QUANDO È INIZIATO IL VIAGGIO
+    activeTrips[tripId] = Date.now();
+    
+    console.log(`⏱️ Start Viaggio: ${tripId} alle ${new Date().toLocaleTimeString()}`);
+    res.json({ tripId: tripId, status: "STARTED" });
 });
 
-// FINE CORSA = IL PASSEGGERO PAGA IL BUS
+// 2. FINE VIAGGIO (Calcolo Costo Reale)
 app.post('/api/trip/end', async (req, res) => {
     try {
-        console.log(`\n💸 RICHIESTA DI PAGAMENTO RICEVUTA...`);
+        const { email, tripId } = req.body; 
+        
+        // RECUPERO TEMPO
+        const startTime = activeTrips[tripId];
+        let durationSeconds = 0;
+        
+        if (startTime) {
+            const endTime = Date.now();
+            durationSeconds = Math.floor((endTime - startTime) / 1000);
+            delete activeTrips[tripId]; // Puliamo la memoria
+        } else {
+            console.log("⚠️ Viaggio non trovato (restart server?), uso durata default.");
+            durationSeconds = 10; 
+        }
 
-        // 1. Creiamo la transazione
+        // CALCOLO COSTO
+        let costAmount = durationSeconds * COSTO_AL_SECONDO;
+        costAmount = Math.round(costAmount * 100) / 100; // Arrotonda a 2 decimali
+        if (costAmount < 0.01) costAmount = 0.01; // Minimo sindacale
+
+        console.log(`\n💸 Pagamento da: ${email}`);
+        console.log(`⏱️ Durata: ${durationSeconds}s | Costo: ${costAmount} IOTA`);
+
+        // GESTIONE PAGAMENTO
+        const users = loadUsers();
+        const payingUser = users.find(u => u.email === email);
+        if (!payingUser) throw new Error("Utente non trovato");
+
+        const userKeypair = Ed25519Keypair.deriveKeypair(payingUser.mnemonic);
+        const userAddress = userKeypair.getPublicKey().toIotaAddress();
+
+        // Controllo fondi
+        const balances = await client.getAllBalances({ owner: userAddress });
+        const totalNanoIota = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
+        
+        // Conversione IOTA -> NanoIOTA
+        const costInNano = Math.floor(costAmount * 1_000_000_000);
+
+        if (totalNanoIota < costInNano) {
+             console.log("⚠️ Saldo basso, transazione a rischio...");
+        }
+
+        // TRANSAZIONE
         const tx = new Transaction();
-        
-        // 2. STABILIAMO IL PREZZO (1 IOTA)
-        const prezzoBiglietto = 1000000000; // 1.00 IOTA
-        
-        // 3. PRENDIAMO I SOLDI DAL PASSEGGERO
-        // tx.gas contiene i soldi del firmatario (Passeggero). Ne stacchiamo un pezzo.
-        const [moneta] = tx.splitCoins(tx.gas, [prezzoBiglietto]);
+        // Usiamo l'importo calcolato (costInNano), non più fisso!
+        const [moneta] = tx.splitCoins(tx.gas, [costInNano]); 
+        tx.transferObjects([moneta], busKeypair.getPublicKey().toIotaAddress());
 
-        // 4. DIAMO QUEL PEZZO AL BUS
-        const busAddress = busKeypair.getPublicKey().toIotaAddress();
-        tx.transferObjects([moneta], busAddress);
-
-        // 5. IL PASSEGGERO FIRMA (Simuliamo che abbia firmato dal telefono)
         const result = await client.signAndExecuteTransaction({
-            signer: passengerKeypair, // <-- PAGA IL PASSEGGERO
+            signer: userKeypair, 
             transaction: tx,
         });
 
-        const txDigest = result.digest;
-        console.log(`✅ INCASSO AVVENUTO CON SUCCESSO!`);
-        console.log(`🔗 Ricevuta: ${txDigest}`);
+        console.log(`✅ Transazione OK: ${result.digest}`);
         
         res.json({ 
             ok: true, 
-            cost: "1.00",
-            message: "Pagamento Ricevuto",
-            explorerUrl: `${EXPLORER_URL}${txDigest}?network=testnet`
+            cost: costAmount.toFixed(2), 
+            message: `Pagamento riuscito`,
+            explorerUrl: `${EXPLORER_URL}${result.digest}?network=testnet`
         });
 
     } catch (e) {
-        console.error("❌ ERRORE PAGAMENTO:", e);
-        res.status(500).json({ error: "Fondi insufficienti o errore rete" });
+        console.error("❌ ERRORE:", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/user/balance', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const users = loadUsers();
+        const user = users.find(u => u.email === email);
+        if (!user) return res.status(404).json({ error: "Utente non trovato" });
+
+        const userKeypair = Ed25519Keypair.deriveKeypair(user.mnemonic);
+        const userAddress = userKeypair.getPublicKey().toIotaAddress();
+
+        const balances = await client.getAllBalances({ owner: userAddress });
+        const totalBalance = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
+        const formattedBalance = (totalBalance / 1_000_000_000).toFixed(2);
+        
+        res.json({ balance: formattedBalance });
+    } catch (e) {
+        console.error("Errore saldo:", e);
+        res.status(500).json({ error: "Errore recupero saldo" });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`\n🌍 BUS IN SERVIZIO: http://localhost:${PORT}`);
+    console.log(`\n🌍 SERVER PRONTO: http://localhost:${PORT}`);
 });
