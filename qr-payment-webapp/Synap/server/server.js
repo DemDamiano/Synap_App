@@ -22,28 +22,53 @@ const EXPLORER_URL = 'https://explorer.rebased.iota.org/txblock/';
 
 const MNEMONIC_BUS = "eternal clutch lock tunnel carpet dial repair popular exist monkey turkey bubble";
 
-// --- CONFIGURAZIONE COSTI ---
+// --- STATO GLOBALE ---
 const activeTrips = {}; 
-const COSTO_AL_SECONDO = 0.01; 
+const serverLogs = [];
 
 let client = null;
 let busKeypair = null;
+
+// --- CONFIGURAZIONE PERSISTENTE ---
+const CONFIG_FILE = path.join(__dirname, 'config.json');
+
+function loadConfig() {
+    try {
+        const data = fs.readFileSync(CONFIG_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (e) {
+        return { costPerSecond: 0.01 };
+    }
+}
+
+function saveConfig(config) {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+}
+
+let appConfig = loadConfig();
+let COSTO_AL_SECONDO = appConfig.costPerSecond;
+
+// --- LOGGING ---
+function log(message) {
+    const timestamp = new Date().toLocaleTimeString();
+    const formattedMsg = `[${timestamp}] ${message}`;
+    console.log(formattedMsg);
+    serverLogs.push(formattedMsg);
+    if (serverLogs.length > 50) serverLogs.shift();
+}
 
 // --- UTILITY DATABASE ---
 function loadUsers() {
     try {
         const data = fs.readFileSync(path.join(__dirname, 'users.json'), 'utf8');
         return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
+    } catch (e) { return []; }
 }
 
 function saveUsers(users) {
     fs.writeFileSync(path.join(__dirname, 'users.json'), JSON.stringify(users, null, 2));
 }
 
-// GENERATORE MNEMONIC SIMULATO (Per demo)
 function generateMockMnemonic() {
     const words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet", "kilo", "lima", "mike", "november", "oscar", "papa", "quebec", "romeo", "sierra", "tango", "uniform", "victor", "whiskey", "xray"];
     let mnemonic = [];
@@ -54,55 +79,58 @@ function generateMockMnemonic() {
 }
 
 async function init() {
-    console.log("-----------------------------------------");
-    console.log("🏦 SERVER BANCA AVVIATO (DYNAMIC PRICING)");
-    console.log("-----------------------------------------");
-
+    log("-----------------------------------------");
+    log("🏦 SERVER BANCA AVVIATO (FULL FEATURES)");
+    log(`⚙️  Tariffa caricata: ${COSTO_AL_SECONDO} IOTA/sec`);
+    log("-----------------------------------------");
     client = new IotaClient({ url: NODE_URL });
     busKeypair = Ed25519Keypair.deriveKeypair(MNEMONIC_BUS);
-    
-    console.log(`👮 CONTO AZIENDA (Bus): ${busKeypair.getPublicKey().toIotaAddress()}`);
+    log(`👮 CONTO AZIENDA (Bus): ${busKeypair.getPublicKey().toIotaAddress()}`);
 }
-
 init();
 
-// --- API ---
+// --- API ADMIN ---
+app.get('/api/admin/config', (req, res) => res.json({ costPerSecond: COSTO_AL_SECONDO }));
+app.post('/api/admin/config', (req, res) => {
+    const { costPerSecond } = req.body;
+    if (costPerSecond && costPerSecond > 0) {
+        COSTO_AL_SECONDO = costPerSecond;
+        saveConfig({ costPerSecond: COSTO_AL_SECONDO });
+        log(`⚙️ TARIFFA AGGIORNATA: ${COSTO_AL_SECONDO} IOTA/sec`);
+        res.json({ ok: true });
+    } else res.status(400).json({ error: "Valore invalido" });
+});
+app.get('/api/admin/logs', (req, res) => res.json({ logs: serverLogs }));
 
-// 1. REGISTRAZIONE (NUOVA)
+// --- API UTENTE ---
+
+// 1. REGISTRAZIONE (Con generazione Wallet reale)
 app.post('/api/auth/register', (req, res) => {
     try {
         const { name, email, password } = req.body;
-        
-        if (!name || !email || !password) {
-            return res.status(400).json({ error: "Tutti i campi sono obbligatori" });
-        }
+        if (!name || !email || !password) return res.status(400).json({ error: "Dati mancanti" });
 
         const users = loadUsers();
+        if (users.find(u => u.email === email)) return res.status(400).json({ error: "Email già in uso" });
 
-        // Controlla duplicati
-        if (users.find(u => u.email === email)) {
-            return res.status(400).json({ error: "Email già registrata" });
-        }
-
-        // Genera wallet
         const newMnemonic = generateMockMnemonic();
-        
+        const userKeypair = Ed25519Keypair.deriveKeypair(newMnemonic);
+        const userAddress = userKeypair.getPublicKey().toIotaAddress();
+
         const newUser = {
-            email,
-            password, 
-            name,
-            mnemonic: newMnemonic
+            email, password, name,
+            mnemonic: newMnemonic,
+            address: userAddress,
+            debt: 0 
         };
 
         users.push(newUser);
         saveUsers(users);
-
-        console.log(`🆕 Registrato: ${name} (${email})`);
-        res.json({ ok: true, message: "Registrazione completata!" });
-
+        log(`🆕 Nuovo Utente: ${name}`);
+        log(`👛 Wallet Creato: ${userAddress}`);
+        res.json({ ok: true });
     } catch (e) {
-        console.error("Errore registrazione:", e);
-        res.status(500).json({ error: "Errore interno server" });
+        res.status(500).json({ error: "Errore server" });
     }
 });
 
@@ -110,115 +138,195 @@ app.post('/api/auth/register', (req, res) => {
 app.post('/api/auth/login', (req, res) => {
     const { email, password } = req.body;
     const users = loadUsers();
-    
     const user = users.find(u => u.email === email && u.password === password);
 
     if (user) {
-        console.log(`🔑 Login: ${user.name}`);
-        res.json({ 
-            token: "token-" + Date.now(), 
-            user: user.name,
-            email: user.email 
-        });
+        log(`🔑 Login: ${user.name}`);
+        res.json({ token: "token-" + Date.now(), user: user.name, email: user.email });
     } else {
-        res.status(401).json({ error: "Email o password errati" });
+        res.status(401).json({ error: "Credenziali errate" });
     }
 });
 
-// 3. INIZIO VIAGGIO
+// 3. START TRIP (Salva Passeggeri + Blocco Debito)
 app.post('/api/trip/start', (req, res) => {
+    const { qrData, email, passengers } = req.body;
+    const users = loadUsers();
+    const user = users.find(u => u.email === email);
+
+    if (!user) return res.status(404).json({ error: "Utente sconosciuto" });
+
+    // BLOCCO DEBITO
+    if (user.debt && user.debt > 0.001) { 
+        log(`⛔ Check-in bloccato per ${user.name}: Debito ${user.debt}`);
+        return res.status(403).json({ 
+            error: "DEBITO_PENDENTE", 
+            message: `Hai un debito di ${user.debt} IOTA. Saldalo per viaggiare.` 
+        });
+    }
+
     const tripId = "TRIP-" + Date.now();
-    activeTrips[tripId] = Date.now();
-    console.log(`⏱️ Start Viaggio: ${tripId} alle ${new Date().toLocaleTimeString()}`);
+    activeTrips[tripId] = {
+        startTime: Date.now(),
+        passengers: passengers || 1
+    };
+    
+    log(`⏱️ Start Viaggio: ${tripId} | Passeggeri: ${passengers || 1}`);
     res.json({ tripId: tripId, status: "STARTED" });
 });
 
-// 4. FINE VIAGGIO
+// 4. END TRIP (Calcolo x Passeggeri + Prelievo Totale)
 app.post('/api/trip/end', async (req, res) => {
     try {
         const { email, tripId } = req.body; 
         
-        const startTime = activeTrips[tripId];
-        let durationSeconds = 0;
-        
-        if (startTime) {
-            const endTime = Date.now();
-            durationSeconds = Math.floor((endTime - startTime) / 1000);
+        // Recupero dati viaggio
+        const tripData = activeTrips[tripId];
+        let durationSeconds = 10;
+        let passengerCount = 1;
+
+        if (tripData) {
+            durationSeconds = Math.floor((Date.now() - tripData.startTime) / 1000);
+            passengerCount = tripData.passengers || 1;
             delete activeTrips[tripId];
-        } else {
-            console.log("⚠️ Viaggio non trovato, uso default.");
-            durationSeconds = 10; 
         }
 
-        let costAmount = durationSeconds * COSTO_AL_SECONDO;
-        costAmount = Math.round(costAmount * 100) / 100; 
-        if (costAmount < 0.01) costAmount = 0.01; 
-
-        console.log(`\n💸 Pagamento da: ${email}`);
-        console.log(`⏱️ Durata: ${durationSeconds}s | Costo: ${costAmount} IOTA`);
+        // Calcolo Costo Totale (Durata * Costo * Passeggeri)
+        let tripCost = (durationSeconds * COSTO_AL_SECONDO) * passengerCount;
+        tripCost = Math.round(tripCost * 100) / 100;
+        if (tripCost < 0.01) tripCost = 0.01;
 
         const users = loadUsers();
-        const payingUser = users.find(u => u.email === email);
-        if (!payingUser) throw new Error("Utente non trovato");
-
-        const userKeypair = Ed25519Keypair.deriveKeypair(payingUser.mnemonic);
-        const userAddress = userKeypair.getPublicKey().toIotaAddress();
-
-        const balances = await client.getAllBalances({ owner: userAddress });
-        const totalNanoIota = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
+        const userIndex = users.findIndex(u => u.email === email);
+        if (userIndex === -1) throw new Error("Utente non trovato");
         
-        const costInNano = Math.floor(costAmount * 1_000_000_000);
+        const user = users[userIndex];
+        const previousDebt = user.debt || 0;
+        const totalAmountDue = tripCost + previousDebt;
 
-        if (totalNanoIota < costInNano) {
-             console.log("⚠️ Saldo basso, transazione a rischio...");
+        log(`🧾 Conto: ${tripCost} (Viaggio x${passengerCount}) + ${previousDebt} (Debito) = ${totalAmountDue}`);
+
+        // Controllo Saldo
+        const userKeypair = Ed25519Keypair.deriveKeypair(user.mnemonic);
+        const balances = await client.getAllBalances({ owner: userKeypair.getPublicKey().toIotaAddress() });
+        const walletBalanceNano = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
+        const totalDueNano = Math.floor(totalAmountDue * 1_000_000_000);
+        
+        let amountToPayNano = 0;
+        let newDebtAmount = 0;
+        let txDigest = null;
+
+        if (walletBalanceNano >= totalDueNano) {
+            amountToPayNano = totalDueNano;
+            newDebtAmount = 0;
+            log(`✅ Saldo sufficiente.`);
+        } else {
+            amountToPayNano = walletBalanceNano;
+            const paidIota = amountToPayNano / 1_000_000_000;
+            newDebtAmount = totalAmountDue - paidIota;
+            newDebtAmount = Math.round(newDebtAmount * 100) / 100;
+            log(`⚠️ SALDO BASSO! Prelevo tutto (${paidIota}). Nuovo Debito: ${newDebtAmount}`);
         }
 
-        const tx = new Transaction();
-        const [moneta] = tx.splitCoins(tx.gas, [costInNano]); 
-        tx.transferObjects([moneta], busKeypair.getPublicKey().toIotaAddress());
+        if (amountToPayNano > 0) {
+            const tx = new Transaction();
+            const [coin] = tx.splitCoins(tx.gas, [amountToPayNano]); 
+            tx.transferObjects([coin], busKeypair.getPublicKey().toIotaAddress());
+            const result = await client.signAndExecuteTransaction({ signer: userKeypair, transaction: tx });
+            txDigest = result.digest;
+        }
 
-        const result = await client.signAndExecuteTransaction({
-            signer: userKeypair, 
-            transaction: tx,
-        });
+        users[userIndex].debt = newDebtAmount;
+        saveUsers(users);
 
-        console.log(`✅ Transazione OK: ${result.digest}`);
-        
         res.json({ 
             ok: true, 
-            cost: costAmount.toFixed(2), 
-            message: `Pagamento riuscito`,
-            explorerUrl: `${EXPLORER_URL}${result.digest}?network=testnet`
+            cost: tripCost.toFixed(2), 
+            paid: (amountToPayNano / 1_000_000_000).toFixed(2),
+            debt: newDebtAmount.toFixed(2),
+            message: newDebtAmount > 0 ? `Pagamento parziale` : `Pagamento completo`,
+            explorerUrl: txDigest ? `${EXPLORER_URL}${txDigest}?network=testnet` : null
         });
 
     } catch (e) {
-        console.error("❌ ERRORE:", e.message);
+        log(`❌ ERRORE: ${e.message}`);
         res.status(500).json({ error: e.message });
     }
 });
 
-// 5. SALDO
+// 5. GET SALDO
 app.post('/api/user/balance', async (req, res) => {
     try {
         const { email } = req.body;
         const users = loadUsers();
         const user = users.find(u => u.email === email);
-        if (!user) return res.status(404).json({ error: "Utente non trovato" });
+        if (!user) return res.status(404).json({ error: "No user" });
 
         const userKeypair = Ed25519Keypair.deriveKeypair(user.mnemonic);
-        const userAddress = userKeypair.getPublicKey().toIotaAddress();
-
-        const balances = await client.getAllBalances({ owner: userAddress });
+        const balances = await client.getAllBalances({ owner: userKeypair.getPublicKey().toIotaAddress() });
         const totalBalance = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
-        const formattedBalance = (totalBalance / 1_000_000_000).toFixed(2);
         
-        res.json({ balance: formattedBalance });
+        res.json({ 
+            balance: (totalBalance / 1_000_000_000).toFixed(2),
+            debt: (user.debt || 0).toFixed(2)
+        });
     } catch (e) {
-        console.error("Errore saldo:", e);
-        res.status(500).json({ error: "Errore recupero saldo" });
+        res.status(500).json({ error: "Errore saldo" });
+    }
+});
+
+// 6. PAGA DEBITO MANUALE
+app.post('/api/user/pay-debt', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const users = loadUsers();
+        const userIndex = users.findIndex(u => u.email === email);
+        if (userIndex === -1) return res.status(404).json({ error: "Utente non trovato" });
+        const user = users[userIndex];
+
+        if (!user.debt || user.debt <= 0) return res.status(400).json({ error: "Nessun debito!" });
+
+        const userKeypair = Ed25519Keypair.deriveKeypair(user.mnemonic);
+        const balances = await client.getAllBalances({ owner: userKeypair.getPublicKey().toIotaAddress() });
+        const walletBalanceNano = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
+        const walletBalance = walletBalanceNano / 1_000_000_000;
+
+        if (walletBalance <= 0) return res.status(400).json({ error: "Wallet vuoto!" });
+
+        let amountToPay = Math.min(walletBalance, user.debt);
+        amountToPay = Math.floor(amountToPay * 100) / 100; // Tronca a 2 decimali per sicurezza
+        
+        if (amountToPay < 0.01) return res.status(400).json({ error: "Saldo troppo basso." });
+
+        log(`💸 Pagamento debito manuale: ${user.name} paga ${amountToPay}`);
+
+        const amountNano = Math.floor(amountToPay * 1_000_000_000);
+        const tx = new Transaction();
+        const [coin] = tx.splitCoins(tx.gas, [amountNano]);
+        tx.transferObjects([coin], busKeypair.getPublicKey().toIotaAddress());
+
+        await client.signAndExecuteTransaction({ signer: userKeypair, transaction: tx });
+
+        user.debt -= amountToPay;
+        if (user.debt < 0.01) user.debt = 0;
+        user.debt = Math.round(user.debt * 100) / 100;
+        
+        saveUsers(users);
+
+        res.json({ 
+            ok: true, 
+            paid: amountToPay.toFixed(2),
+            remainingDebt: user.debt.toFixed(2),
+            message: `Pagati ${amountToPay} IOTA.`
+        });
+
+    } catch (e) {
+        log(`❌ Errore Pay Debt: ${e.message}`);
+        res.status(500).json({ error: e.message });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`\n🌍 SERVER PRONTO: http://localhost:${PORT}`);
+    log(`🌍 SERVER PRONTO: http://localhost:${PORT}`);
+    log(`⚙️  DASHBOARD ADMIN: http://localhost:${PORT}/admin.html`);
 });

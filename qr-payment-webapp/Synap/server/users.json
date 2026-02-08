@@ -3,13 +3,15 @@
     "email": "damiano.rovella@hotmail.com",
     "password": "123",
     "name": "Damiano",
-    "mnemonic": "organ screen story car during scavenge rigid box confirm old huge wealth"
+    "mnemonic": "organ screen story car during scavenge rigid box confirm old huge wealth",
+    "debt": 0
   },
   {
     "email": "martina.frazzo@gmail.com",
     "password": "123",
     "name": "Martina",
-    "mnemonic": "scale original hero check alien damp trip guard absorb summer bird tuna"
+    "mnemonic": "scale original hero check alien damp trip guard absorb summer bird tuna",
+    "debt": 166.81
   },
   {
     "email": "tizio@gmail.com",

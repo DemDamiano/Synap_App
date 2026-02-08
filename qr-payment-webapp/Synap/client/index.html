@@ -28,7 +28,6 @@
                     <input type="password" id="password" placeholder="Password" required>
                     <button type="submit" class="btn primary">Accedi</button>
                 </form>
-                
                 <div style="margin-top: 20px;">
                     <p>Non hai un account?</p>
                     <button onclick="showView('register')" class="link">Crea un account</button>
@@ -44,13 +43,9 @@
                     <input type="text" id="reg-name" placeholder="Il tuo Nome" required>
                     <input type="email" id="reg-email" placeholder="Email" required>
                     <input type="password" id="reg-password" placeholder="Password" required>
-                    
                     <button type="submit" class="btn primary">Registrati</button>
                 </form>
-                
-                <button onclick="showView('login')" class="link" style="margin-top: 15px;">
-                    Torna al Login
-                </button>
+                <button onclick="showView('login')" class="link" style="margin-top: 15px;">Torna al Login</button>
             </div>
         </section>
 
@@ -58,47 +53,74 @@
             <div class="card">
                 <p class="status-text">Il tuo saldo disponibile</p>
                 <div class="balance">
-                    <span id="balance-amount">10.00</span> 
+                    <span id="balance-amount">0.00</span> 
                     <span class="currency">IOTA</span>
+                </div>
+                
+                <div id="debt-warning" style="display: none; background: #FF3B30; color: white; padding: 15px; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 10px rgba(255, 59, 48, 0.3);">
+                    <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">
+                        ⚠️ DEBITO: <span id="debt-amount">0.00</span> IOTA
+                    </div>
+                    <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 10px;">
+                        Non puoi viaggiare finché non saldi.
+                    </div>
+                    <button onclick="handlePayDebt()" style="background: white; color: #FF3B30; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
+                        💸 Usa Saldo per Pagare
+                    </button>
                 </div>
             </div>
             
             <button onclick="startScanner('START')" class="btn primary">📷 Inizia Viaggio (IN)</button>
         </section>
 
-        <section id="view-scan" class="view">
-            <h2 style="margin-bottom: 20px;">Scansiona QR</h2>
-            
-            <div id="reader"></div> 
-            
-            <div class="card">
-                <p class="status-text">Oppure inserisci codice</p>
-                <input type="text" id="manual-code-input" placeholder="Es. IN-BUS-01">
-                <button onclick="handleManualEntry()" class="btn secondary">Conferma Manuale</button>
-                <button onclick="showView('home')" class="btn link" style="margin-top:10px">Annulla</button>
-            </div>
-        </section>
+       <section id="view-scan" class="view">
+    <h2 style="margin-bottom: 20px;">Scansiona QR</h2>
+    
+    <div id="reader"></div> 
+    
+    <div id="passenger-selector-container" class="card" style="margin-bottom: 15px; padding: 15px;">
+        <p class="status-text" style="margin-bottom: 10px;">Numero Viaggiatori</p>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+            <button onclick="changePassenger(-1)" class="btn secondary" style="width: 50px; margin:0;">-</button>
+            <span id="passenger-count-display" style="font-size: 2rem; font-weight: bold;">1</span>
+            <button onclick="changePassenger(1)" class="btn primary" style="width: 50px; margin:0;">+</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <p class="status-text">Oppure inserisci codice</p>
+        <input type="text" id="manual-code-input" placeholder="Es. IN-BUS-01">
+        <button onclick="handleManualEntry()" class="btn secondary">Conferma Manuale</button>
+        <button onclick="showView('home')" class="btn link" style="margin-top:10px">Annulla</button>
+    </div>
+</section>
 
         <section id="view-trip" class="view">
             <div class="card pulsate">
                 <div style="font-size: 50px;">🚌</div>
                 <h2>In Viaggio</h2>
+                
                 <p class="status-text">Veicolo: <strong id="trip-id-display">--</strong></p>
+                <p class="status-text" style="margin-top:5px;">Passeggeri: <strong id="trip-passengers-display">1</strong> 👤</p>
                 
                 <div class="live-stats" style="margin: 20px 0;">
                     <div id="trip-timer" class="timer">00:00</div>
-                    <p style="font-size: 1.2rem; color: #8E8E93;">
-                        Stima: <strong id="trip-cost" style="color: var(--primary);">0.00</strong> IOTA
+                    
+                    <p style="font-size: 1.5rem; margin: 10px 0;">
+                        <strong id="trip-cost" style="color: var(--primary);">0.00</strong> <small>IOTA</small>
                     </p>
+
+                    <div style="background: #f0f0f5; padding: 5px 10px; border-radius: 8px; display: inline-block;">
+                        <span style="color: #666; font-size: 0.9rem;">Tariffa: </span>
+                        <strong id="trip-rate-display" style="color: #333;">--</strong> 
+                        <span style="font-size: 0.8rem;"> IOTA/s</span>
+                    </div>
                 </div>
             </div>
 
             <div style="width: 100%; margin-top: auto;">
                 <button onclick="startScanner('END')" class="btn danger">SCENDI E PAGA (OUT)</button>
-                
-                <button onclick="endTrip('OUT-DEBUG-FORCE')" class="link" style="color: #999; margin-top: 20px;">
-                    (Debug) Forza Fine Corsa
-                </button>
+                <button onclick="endTrip('OUT-DEBUG-FORCE')" class="link" style="color: #999; margin-top: 20px;">(Debug) Forza Fine Corsa</button>
             </div>
         </section>
 
@@ -106,6 +128,5 @@
             <div class="ticket card"></div>
         </section>
     </main>
-
 </body>
 </html>

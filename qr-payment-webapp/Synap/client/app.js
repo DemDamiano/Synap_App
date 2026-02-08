@@ -8,9 +8,10 @@ let currentTripId = null;
 let html5QrCode = null;
 let scanMode = 'START'; 
 
-// Variabili Timer
 let tripInterval = null;
 let tripStartTime = null;
+let pricePerSecond = 0.01;
+let selectedPassengers = 1;
 
 const views = {
     login: document.getElementById('view-login'),
@@ -21,36 +22,46 @@ const views = {
     result: document.getElementById('view-result')
 };
 
-// ==========================================
-//           NAVIGAZIONE
-// ==========================================
 function showView(viewName) {
     Object.values(views).forEach(el => el.classList.remove('active'));
     if (views[viewName]) views[viewName].classList.add('active');
 }
 
-// ==========================================
-//           LOGIN & REGISTER
-// ==========================================
+// SINCRONIZZA PREZZO
+async function syncPrice() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/config`);
+        const data = await response.json();
+        if (data.costPerSecond) pricePerSecond = data.costPerSecond;
+    } catch (e) {}
+}
+
+// GESTIONE PASSEGGERI (CON CONTROLLI NULL)
+function changePassenger(delta) {
+    selectedPassengers += delta;
+    if (selectedPassengers < 1) selectedPassengers = 1;
+    if (selectedPassengers > 10) selectedPassengers = 10;
+    
+    const display = document.getElementById('passenger-count-display');
+    if (display) {
+        display.innerText = selectedPassengers;
+    }
+}
+
+// AUTH
 async function handleLogin(event) {
     event.preventDefault();
     const btn = document.querySelector('#login-form button');
-    const originalText = btn.innerText;
-    btn.innerText = "Attendere...";
-    btn.disabled = true;
-
+    btn.innerText = "..."; btn.disabled = true;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        const res = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ email, password })
         });
-        const data = await response.json();
-
-        if (response.ok) {
+        const data = await res.json();
+        if (res.ok) {
             localStorage.setItem('synap_token', data.token);
             localStorage.setItem('synap_user', data.user);
             localStorage.setItem('synap_email', data.email);
@@ -58,260 +69,230 @@ async function handleLogin(event) {
             updateUIProfile();
             showView('home');
             refreshBalance();
-        } else {
-            alert(data.error || "Errore Login");
-        }
-    } catch (e) { alert("Errore connessione server"); }
-    finally { btn.innerText = originalText; btn.disabled = false; }
+            syncPrice();
+        } else alert(data.error);
+    } catch (e) {} finally { btn.innerText = "Accedi"; btn.disabled = false; }
 }
 
 async function handleRegister(event) {
     event.preventDefault();
     const btn = document.querySelector('#register-form button');
-    const originalText = btn.innerText;
-    btn.innerText = "Creazione...";
-    btn.disabled = true;
-
+    btn.innerText = "..."; btn.disabled = true;
     const name = document.getElementById('reg-name').value;
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
-
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        const res = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ name, email, password })
         });
-        
-        const data = await response.json();
-
-        if (response.ok) {
-            alert("✅ Registrazione completata! Ora puoi fare il login.");
-            showView('login');
-            document.getElementById('register-form').reset();
-        } else {
-            alert("❌ Errore: " + data.error);
-        }
-    } catch (e) {
-        alert("Errore di connessione al server");
-    } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
+        const data = await res.json();
+        if (res.ok) {
+            alert("Registrato!"); showView('login'); document.getElementById('register-form').reset();
+        } else alert(data.error);
+    } catch (e) {} finally { btn.innerText = "Registrati"; btn.disabled = false; }
 }
 
-function handleLogout() {
-    stopTripTimer();
-    localStorage.clear();
-    location.reload();
+function handleLogout() { stopTripTimer(); localStorage.clear(); location.reload(); }
+function updateUIProfile() { 
+    const el = document.querySelector('.user-name'); 
+    if(el) el.innerText = currentUser || 'Ospite'; 
 }
 
-function updateUIProfile() {
-    const el = document.querySelector('.user-name');
-    if (el) el.innerText = currentUser || 'Ospite';
-}
-
-// ==========================================
-//           SCANNER INTELLIGENTE
-// ==========================================
+// SCANNER
 function startScanner(mode) {
     scanMode = mode || 'START';
-    
     const title = document.querySelector('#view-scan h2');
     const manualInput = document.getElementById('manual-code-input');
+    
+    // Recuperiamo il contenitore del selettore
+    const passengerSelector = document.getElementById('passenger-selector-container');
 
     if (scanMode === 'END') {
-        title.innerText = "🛑 SCANSIONA USCITA (OUT)";
+        title.innerText = "🛑 SCANSIONA USCITA (OUT)"; 
         title.style.color = "red";
         if(manualInput) manualInput.placeholder = "Es. OUT-BUS-01";
+        
+        // NASCONDI IL SELETTORE PASSEGGERI (Non serve all'uscita)
+        if(passengerSelector) passengerSelector.style.display = 'none';
+
     } else {
-        title.innerText = "🟢 SCANSIONA ENTRATA (IN)";
+        title.innerText = "🟢 SCANSIONA ENTRATA (IN)"; 
         title.style.color = "var(--primary)";
         if(manualInput) manualInput.placeholder = "Es. IN-BUS-01";
+        
+        // MOSTRA IL SELETTORE PASSEGGERI (Serve all'entrata)
+        if(passengerSelector) passengerSelector.style.display = 'block';
     }
 
     showView('scan');
+    
+    // Resetta visualizzazione numero (solo grafico)
+    const passDisplay = document.getElementById('passenger-count-display');
+    if(passDisplay) passDisplay.innerText = selectedPassengers;
 
     if (html5QrCode) return;
-
     setTimeout(() => {
         html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            { fps: 10, qrbox: { width: 250, height: 250 } }, 
-            onScanSuccess,
-            () => {} 
-        ).catch(err => alert("Errore fotocamera: " + err));
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, ()=>{})
+        .catch(err => alert("Errore fotocamera"));
     }, 300);
 }
-
-function stopScanner() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => { html5QrCode.clear(); html5QrCode = null; }).catch(()=>{});
-    }
+function stopScanner() { if (html5QrCode) html5QrCode.stop().then(() => { html5QrCode.clear(); html5QrCode = null; }).catch(()=>{}); }
+function onScanSuccess(t) {
+    if (scanMode === 'START' && !t.startsWith('IN-')) return alert("Usa codice IN");
+    if (scanMode === 'END' && !t.startsWith('OUT-')) return alert("Usa codice OUT");
+    stopScanner();
+    (scanMode === 'START') ? startTrip(t) : endTrip(t);
 }
+function handleManualEntry() { const v = document.getElementById('manual-code-input').value.toUpperCase(); if(v) onScanSuccess(v); }
 
-function onScanSuccess(decodedText, decodedResult) {
-    if (scanMode === 'START') {
-        if (!decodedText.startsWith('IN-')) {
-            alert("❌ Errore! Scansiona un codice IN.");
-            return; 
-        }
-        stopScanner();
-        startTrip(decodedText);
-    } 
-    else if (scanMode === 'END') {
-        if (!decodedText.startsWith('OUT-')) {
-            alert("❌ Errore! Scansiona un codice OUT.");
-            return; 
-        }
-        stopScanner();
-        endTrip(decodedText);
-    }
-}
-
-function handleManualEntry() {
-    const el = document.getElementById('manual-code-input');
-    if(!el) return;
-    const code = el.value.trim().toUpperCase();
-    if (!code) return;
-    onScanSuccess(code, null);
-}
-
-// ==========================================
-//           LOGICA VIAGGIO & TIMER
-// ==========================================
-
+// VIAGGIO E TIMER
 function startTripTimer() {
     tripStartTime = Date.now();
     const timerEl = document.getElementById('trip-timer');
     const costEl = document.getElementById('trip-cost');
+    if(!timerEl || !costEl) return;
     
-    if(!timerEl || !costEl) {
-        console.error("Elementi timer non trovati nel DOM!");
-        return;
-    }
-
-    timerEl.innerText = "00:00";
-    costEl.innerText = "0.00";
-
+    timerEl.innerText = "00:00"; costEl.innerText = "0.00";
+    
     tripInterval = setInterval(() => {
-        const now = Date.now();
-        const diffInSeconds = Math.floor((now - tripStartTime) / 1000);
+        const diff = Math.floor((Date.now() - tripStartTime) / 1000);
+        const min = Math.floor(diff / 60).toString().padStart(2, '0');
+        const sec = (diff % 60).toString().padStart(2, '0');
+        timerEl.innerText = `${min}:${sec}`;
         
-        const minutes = Math.floor(diffInSeconds / 60).toString().padStart(2, '0');
-        const seconds = (diffInSeconds % 60).toString().padStart(2, '0');
-        timerEl.innerText = `${minutes}:${seconds}`;
-
-        const currentCost = (diffInSeconds * 0.01);
+        // CALCOLO VISIVO: (Tempo * Tariffa * Passeggeri)
+        const currentCost = (diff * pricePerSecond * selectedPassengers);
         costEl.innerText = currentCost.toFixed(2);
-
     }, 1000);
 }
-
-function stopTripTimer() {
-    if (tripInterval) {
-        clearInterval(tripInterval);
-        tripInterval = null;
-    }
-}
+function stopTripTimer() { if (tripInterval) { clearInterval(tripInterval); tripInterval = null; } }
 
 async function startTrip(qrData) {
     try {
+        const email = localStorage.getItem('synap_email');
+        if(!email) throw new Error("Utente non loggato");
+        await syncPrice();
+        
         const res = await fetch(`${API_BASE_URL}/trip/start`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ qrData })
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ qrData, email, passengers: selectedPassengers }) 
         });
         const data = await res.json();
-        if (data.status === 'STARTED') {
-            currentTripId = data.tripId;
-            showView('trip');
-            document.getElementById('trip-id-display').innerText = qrData;
-            startTripTimer();
+
+        if (res.status === 403 && data.error === "DEBITO_PENDENTE") {
+            alert("⛔ " + data.message); showView('home'); return;
         }
-    } catch (e) { alert("Errore avvio viaggio"); showView('home'); }
+
+        if (data.status === 'STARTED') {
+            currentTripId = data.tripId; 
+            showView('trip'); 
+            
+            // AGGIORNAMENTO UI SICURO
+            const idDisp = document.getElementById('trip-id-display');
+            if(idDisp) idDisp.innerText = qrData;
+            
+            const passDisp = document.getElementById('trip-passengers-display');
+            if(passDisp) passDisp.innerText = selectedPassengers;
+
+            const rateDisp = document.getElementById('trip-rate-display');
+            if(rateDisp) rateDisp.innerText = pricePerSecond;
+
+            startTripTimer();
+        } else throw new Error(data.error);
+    } catch (e) { alert("Errore: " + e.message); showView('home'); }
 }
 
 async function endTrip(qrData) {
-    stopTripTimer(); 
-    
+    stopTripTimer();
     showView('result');
     const box = document.querySelector('.ticket');
-    box.innerHTML = `<div class="loader"></div><h3>Elaborazione...</h3>`;
+    box.innerHTML = `<div class="loader"></div><h3>Calcolo Pagamento...</h3>`;
 
     try {
         const email = localStorage.getItem('synap_email');
         const res = await fetch(`${API_BASE_URL}/trip/end`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ tripId: currentTripId, qrData, email })
         });
         const data = await res.json();
 
         if (data.ok) {
+            let icon = "✅"; let color = "var(--primary)"; let title = "Pagato!"; let note = "";
+            if (parseFloat(data.debt) > 0) {
+                icon = "⚠️"; color = "#FF3B30"; title = "Pagamento Parziale";
+                note = `<p style="color:red; font-weight:bold; margin-top:10px;">Saldo insufficiente.<br>Nuovo Debito: ${data.debt}</p>`;
+            } 
+
             box.innerHTML = `
-                <div style="font-size: 60px;">✅</div>
-                <h2 style="color:var(--primary)">Pagato!</h2>
-                <p class="balance">-${data.cost} <small>IOTA</small></p>
-                <a href="${data.explorerUrl}" target="_blank" class="btn secondary">Ricevuta Blockchain</a>
-                <button onclick="resetAppAndHome()" class="btn primary" style="margin-top:10px">Nuovo Viaggio</button>
+                <div style="font-size: 60px;">${icon}</div>
+                <h2 style="color:${color}">${title}</h2>
+                <p class="balance">-${data.paid} <small>IOTA</small></p>
+                <p>Costo Totale: ${data.cost}</p>
+                ${note}
+                ${data.explorerUrl ? `<a href="${data.explorerUrl}" target="_blank" class="btn secondary">Vedi su Blockchain</a>` : ''}
+                <button onclick="resetAppAndHome()" class="btn primary" style="margin-top:10px">Ok, ho capito</button>
             `;
             refreshBalance();
-        } else { throw new Error(data.error); }
+        } else throw new Error(data.error);
     } catch (e) {
-        box.innerHTML = `<h3 style="color:var(--danger)">Errore</h3><p>${e.message}</p><button onclick="showView('home')" class="btn secondary">Home</button>`;
+        box.innerHTML = `<h3 style="color:red">Errore</h3><p>${e.message}</p><button onclick="showView('home')" class="btn secondary">Home</button>`;
     }
 }
 
 async function refreshBalance() {
     const email = localStorage.getItem('synap_email');
     if (!email) return;
-
     const balanceEl = document.getElementById('balance-amount');
-    if (!balanceEl) return;
-
-    balanceEl.style.opacity = "0.5"; 
+    const debtBox = document.getElementById('debt-warning');
+    const debtAmount = document.getElementById('debt-amount');
+    if (balanceEl) balanceEl.style.opacity = "0.5";
 
     try {
-        const response = await fetch(`${API_BASE_URL}/user/balance`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
+        const res = await fetch(`${API_BASE_URL}/user/balance`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
         });
-        const data = await response.json();
+        const data = await res.json();
         if (data.balance) {
-            balanceEl.innerText = data.balance; 
+            if(balanceEl) balanceEl.innerText = data.balance;
+            if (parseFloat(data.debt) > 0) {
+                debtBox.style.display = "block"; debtAmount.innerText = data.debt;
+            } else { debtBox.style.display = "none"; }
         }
-    } catch (e) {
-        console.error("Errore saldo", e);
-    } finally {
-        if(balanceEl) balanceEl.style.opacity = "1";
-    }
+    } catch (e) {} finally { if(balanceEl) balanceEl.style.opacity = "1"; }
+}
+
+async function handlePayDebt() {
+    const email = localStorage.getItem('synap_email');
+    if(!confirm("Vuoi usare il saldo per pagare il debito?")) return;
+    
+    const btn = document.querySelector('#debt-warning button');
+    const oldText = btn.innerText;
+    btn.innerText = "..."; btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/user/pay-debt`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if(res.ok) { alert("✅ " + data.message); refreshBalance(); }
+        else alert("❌ " + data.error);
+    } catch(e) { alert("Errore rete"); } 
+    finally { btn.innerText = oldText; btn.disabled = false; }
 }
 
 function resetAppAndHome() {
-    showView('home');
-    refreshBalance();
-    currentTripId = null;
-    scanMode = 'START';
+    showView('home'); refreshBalance(); currentTripId = null; scanMode = 'START';
+    selectedPassengers = 1;
+    if(document.getElementById('passenger-count-display')) document.getElementById('passenger-count-display').innerText = "1";
 }
 
-// STARTUP
 document.addEventListener('DOMContentLoaded', () => {
     const user = localStorage.getItem('synap_user');
     if (user) { 
-        currentUser = user; 
-        updateUIProfile(); 
-        showView('home'); 
-        refreshBalance();
-    } else {
-        showView('login');
-    }
-    
-    const loginForm = document.getElementById('login-form');
-    if(loginForm) loginForm.addEventListener('submit', handleLogin);
-
-    const registerForm = document.getElementById('register-form');
-    if(registerForm) registerForm.addEventListener('submit', handleRegister);
+        currentUser = user; updateUIProfile(); showView('home'); refreshBalance(); syncPrice();
+    } else showView('login');
+    const l = document.getElementById('login-form'); if(l) l.addEventListener('submit', handleLogin);
+    const r = document.getElementById('register-form'); if(r) r.addEventListener('submit', handleRegister);
 });
