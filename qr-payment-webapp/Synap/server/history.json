@@ -1,0 +1,67 @@
+[
+  {
+    "user": "Damiano",
+    "startTime": "9:32:12 AM",
+    "endTime": "9:32:23 AM",
+    "duration": 8,
+    "passengers": 1,
+    "cost": "0.08",
+    "status": "FULL",
+    "tx": "42gSwDzE..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Cuneo - Torino",
+    "startTime": "9:38:30 AM",
+    "endTime": "9:38:46 AM",
+    "duration": 13,
+    "passengers": 1,
+    "cost": "0.13",
+    "status": "FULL",
+    "tx": "JB5msL7L..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Cuneo - Torino",
+    "startTime": "9:41:57 AM",
+    "endTime": "9:42:25 AM",
+    "duration": 27,
+    "passengers": 1,
+    "cost": "0.27",
+    "status": "FULL",
+    "tx": "8mx6sbCT..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Cuneo - Torino",
+    "startTime": "10:02:27 AM",
+    "endTime": "10:02:42 AM",
+    "duration": 14,
+    "passengers": 1,
+    "cost": "0.14",
+    "status": "FULL",
+    "tx": "8Uv65QBS..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Cuneo - Torino",
+    "startTime": "10:03:22 AM",
+    "endTime": "10:03:31 AM",
+    "duration": 8,
+    "passengers": 1,
+    "cost": "0.08",
+    "status": "FULL",
+    "tx": "EZMXfEDP..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Urbana (Centro)",
+    "startTime": "10:03:45 AM",
+    "endTime": "10:03:51 AM",
+    "duration": 5,
+    "passengers": 1,
+    "cost": "0.10",
+    "status": "FULL",
+    "tx": "CFWkCaCX..."
+  }
+]

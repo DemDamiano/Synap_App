@@ -73,37 +73,44 @@
             <button onclick="startScanner('START')" class="btn primary">📷 Inizia Viaggio (IN)</button>
         </section>
 
-       <section id="view-scan" class="view">
-    <h2 style="margin-bottom: 20px;">Scansiona QR</h2>
-    
-    <div id="reader"></div> 
-    
-    <div id="passenger-selector-container" class="card" style="margin-bottom: 15px; padding: 15px;">
-        <p class="status-text" style="margin-bottom: 10px;">Numero Viaggiatori</p>
-        <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-            <button onclick="changePassenger(-1)" class="btn secondary" style="width: 50px; margin:0;">-</button>
-            <span id="passenger-count-display" style="font-size: 2rem; font-weight: bold;">1</span>
-            <button onclick="changePassenger(1)" class="btn primary" style="width: 50px; margin:0;">+</button>
-        </div>
-    </div>
+        <section id="view-scan" class="view">
+            <h2 style="margin-bottom: 20px;">Scansiona QR</h2>
+            
+            <div id="reader"></div> 
+            
+            <div id="passenger-selector-container" class="card" style="margin-bottom: 15px; padding: 15px;">
+                <p class="status-text" style="margin-bottom: 10px;">Numero Viaggiatori</p>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                    <button onclick="changePassenger(-1)" class="btn secondary" style="width: 50px; margin:0;">-</button>
+                    <span id="passenger-count-display" style="font-size: 2rem; font-weight: bold;">1</span>
+                    <button onclick="changePassenger(1)" class="btn primary" style="width: 50px; margin:0;">+</button>
+                </div>
+            </div>
 
-    <div class="card">
-        <p class="status-text">Oppure inserisci codice</p>
-        <input type="text" id="manual-code-input" placeholder="Es. IN-BUS-01">
-        <button onclick="handleManualEntry()" class="btn secondary">Conferma Manuale</button>
-        <button onclick="showView('home')" class="btn link" style="margin-top:10px">Annulla</button>
-    </div>
-</section>
+            <div class="card">
+                <p class="status-text">Oppure inserisci codice</p>
+                <input type="text" id="manual-code-input" placeholder="Es. IN-BUS-01">
+                <button onclick="handleManualEntry()" class="btn secondary">Conferma Manuale</button>
+                <button onclick="showView('home')" class="btn link" style="margin-top:10px">Annulla</button>
+            </div>
+        </section>
 
         <section id="view-trip" class="view">
             <div class="card pulsate">
                 <div style="font-size: 50px;">🚌</div>
                 <h2>In Viaggio</h2>
                 
-                <p class="status-text">Veicolo: <strong id="trip-id-display">--</strong></p>
-                <p class="status-text" style="margin-top:5px;">Passeggeri: <strong id="trip-passengers-display">1</strong> 👤</p>
+                <div style="background: #f1f3f5; border-radius: 8px; padding: 10px; margin: 15px 0; border: 1px solid #ddd;">
+                    <p style="margin: 0; font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 1px;">Tratta Attiva</p>
+                    <strong id="trip-route-display" style="font-size: 1.3rem; color: #007bff; display: block; margin-top: 5px;">--</strong>
+                </div>
                 
-                <div class="live-stats" style="margin: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; color: #555;">
+                    <span>Veicolo: <strong id="trip-id-display">--</strong></span>
+                    <span>Passeggeri: <strong id="trip-passengers-display">1</strong> 👤</span>
+                </div>
+                
+                <div class="live-stats" style="margin: 20px 0; border-top: 1px solid #eee; padding-top: 20px;">
                     <div id="trip-timer" class="timer">00:00</div>
                     
                     <p style="font-size: 1.5rem; margin: 10px 0;">
@@ -120,7 +127,9 @@
 
             <div style="width: 100%; margin-top: auto;">
                 <button onclick="startScanner('END')" class="btn danger">SCENDI E PAGA (OUT)</button>
-                <button onclick="endTrip('OUT-DEBUG-FORCE')" class="link" style="color: #999; margin-top: 20px;">(Debug) Forza Fine Corsa</button>
+                <button onclick="endTrip('OUT-DEBUG-FORCE')" class="link" style="color: #999; margin-top: 20px;">
+                    (Debug) Forza Fine Corsa
+                </button>
             </div>
         </section>
 

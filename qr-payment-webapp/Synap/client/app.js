@@ -36,7 +36,7 @@ async function syncPrice() {
     } catch (e) {}
 }
 
-// GESTIONE PASSEGGERI (CON CONTROLLI NULL)
+// GESTIONE PASSEGGERI
 function changePassenger(delta) {
     selectedPassengers += delta;
     if (selectedPassengers < 1) selectedPassengers = 1;
@@ -104,30 +104,23 @@ function startScanner(mode) {
     scanMode = mode || 'START';
     const title = document.querySelector('#view-scan h2');
     const manualInput = document.getElementById('manual-code-input');
-    
-    // Recuperiamo il contenitore del selettore
     const passengerSelector = document.getElementById('passenger-selector-container');
 
     if (scanMode === 'END') {
         title.innerText = "🛑 SCANSIONA USCITA (OUT)"; 
         title.style.color = "red";
         if(manualInput) manualInput.placeholder = "Es. OUT-BUS-01";
-        
-        // NASCONDI IL SELETTORE PASSEGGERI (Non serve all'uscita)
         if(passengerSelector) passengerSelector.style.display = 'none';
 
     } else {
         title.innerText = "🟢 SCANSIONA ENTRATA (IN)"; 
         title.style.color = "var(--primary)";
         if(manualInput) manualInput.placeholder = "Es. IN-BUS-01";
-        
-        // MOSTRA IL SELETTORE PASSEGGERI (Serve all'entrata)
         if(passengerSelector) passengerSelector.style.display = 'block';
     }
 
     showView('scan');
     
-    // Resetta visualizzazione numero (solo grafico)
     const passDisplay = document.getElementById('passenger-count-display');
     if(passDisplay) passDisplay.innerText = selectedPassengers;
 
@@ -162,7 +155,6 @@ function startTripTimer() {
         const sec = (diff % 60).toString().padStart(2, '0');
         timerEl.innerText = `${min}:${sec}`;
         
-        // CALCOLO VISIVO: (Tempo * Tariffa * Passeggeri)
         const currentCost = (diff * pricePerSecond * selectedPassengers);
         costEl.innerText = currentCost.toFixed(2);
     }, 1000);
@@ -189,9 +181,16 @@ async function startTrip(qrData) {
             currentTripId = data.tripId; 
             showView('trip'); 
             
-            // AGGIORNAMENTO UI SICURO
+            // AGGIORNAMENTO UI
             const idDisp = document.getElementById('trip-id-display');
             if(idDisp) idDisp.innerText = qrData;
+            
+            // <--- QUI AGGIORNIAMO IL TESTO DELLA TRATTA --->
+            const routeDisp = document.getElementById('trip-route-display');
+            if(routeDisp) {
+                // Se la rotta è definita la mostra, altrimenti mette un default
+                routeDisp.innerText = data.routeName || "Tariffa Standard"; 
+            }
             
             const passDisp = document.getElementById('trip-passengers-display');
             if(passDisp) passDisp.innerText = selectedPassengers;

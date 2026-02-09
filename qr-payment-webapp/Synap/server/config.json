@@ -1,3 +1,4 @@
 {
-  "costPerSecond": 0.01
+  "costPerSecond": 0.02,
+  "currentRouteId": "route-2"
 }

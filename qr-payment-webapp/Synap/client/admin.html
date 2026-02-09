@@ -3,100 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synap Admin Dashboard</title>
+    <title>Synap Admin Pro</title>
     <style>
-        body { font-family: monospace; background: #1e1e1e; color: #0f0; padding: 20px; }
-        .card { background: #2d2d2d; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #444; }
-        h1, h2 { color: #fff; margin-top: 0; }
-        input { padding: 10px; background: #444; border: 1px solid #666; color: #fff; width: 100px; font-family: monospace; }
-        button { padding: 10px 20px; background: #007bff; border: none; color: white; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0056b3; }
-        #logs { height: 400px; overflow-y: scroll; background: #000; padding: 10px; border: 1px solid #444; white-space: pre-wrap; color: #ccc; }
-        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 2px; }
-        .highlight { color: #ffd700; font-weight: bold; }
-        .success { color: #4caf50; }
-        .error { color: #f44336; }
+        body { font-family: 'Segoe UI', monospace; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; gap: 20px; grid-template-columns: 1fr 1fr; }
+        .full-width { grid-column: 1 / -1; }
+        .card { background: #1e1e1e; border-radius: 12px; padding: 20px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h2 { margin-top: 0; border-bottom: 2px solid #333; padding-bottom: 10px; color: #00bcd4; font-size: 1.2rem; display: flex; justify-content: space-between; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stat-box { background: #2c2c2c; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: bold; color: #fff; }
+        .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
+        
+        /* Controlli Tariffa */
+        .config-row { display: flex; gap: 10px; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; }
+        select, input { background: #333; border: 1px solid #555; color: white; padding: 10px; border-radius: 4px; }
+        button { background: #00bcd4; color: black; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        button:hover { background: #00acc1; }
+        button.danger { background: #d32f2f; color: white; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { text-align: left; padding: 10px; color: #888; border-bottom: 1px solid #444; }
+        td { padding: 10px; border-bottom: 1px solid #2a2a2a; }
+        tr:last-child td { border-bottom: none; }
+        .status-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .status-ok { background: #1b5e20; color: #a5d6a7; }
+        .status-debt { background: #b71c1c; color: #ffcdd2; }
+        .live-cost { color: #00bcd4; font-family: monospace; font-weight: bold; }
+        #logs-raw { height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; color: #666; }
+
+        /* Lista Tratte */
+        .route-item { display: flex; justify-content: space-between; align-items: center; background: #252525; padding: 10px; margin-bottom: 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <h1>🚀 Synap Server Dashboard</h1>
+    <h1 style="text-align: center; color: white;">🚍 Synap Control Tower</h1>
 
-    <div class="card">
-        <h2>💰 Configurazione Tariffa</h2>
-        <p>Costo attuale: <strong id="current-price" class="highlight">--</strong> IOTA/sec</p>
+    <div class="container">
         
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <label>Nuovo Costo (IOTA/s):</label>
-            <input type="number" id="new-price" step="0.01" min="0.01" placeholder="0.01">
-            <button onclick="updatePrice()">AGGIORNA TARIFFA</button>
+        <div class="card full-width">
+            <h2>🎛️ Pannello Controllo</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-pax">0</div>
+                    <div class="stat-label">Passeggeri</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="stat-price">--</div>
+                    <div class="stat-label">Tariffa Attuale</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" style="color: #4caf50;" id="stat-revenue">0.00</div>
+                    <div class="stat-label">Ricavo Sessione</div>
+                </div>
+            </div>
+            
+            <div class="config-row">
+                <label>📍 Seleziona Tratta Attiva:</label>
+                <select id="route-select" style="flex-grow: 1;">
+                    <option value="">Caricamento...</option>
+                </select>
+                <button onclick="applyRoute()">IMPOSTA TRATTA</button>
+            </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>📜 Server Logs (Real-time)</h2>
-            <button onclick="fetchLogs()" style="background: #444; font-size: 0.8rem;">Aggiorna</button>
+        <div class="card">
+            <h2>🗺️ Gestione Tratte</h2>
+            <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+                <input type="text" id="new-route-name" placeholder="Nome Tratta (es. Cuneo-Torino)" style="flex-grow:1;">
+                <input type="number" id="new-route-cost" placeholder="Costo/sec" style="width: 80px;" step="0.01">
+                <button onclick="addRoute()">+</button>
+            </div>
+            <div id="routes-list" style="max-height: 200px; overflow-y: auto;">
+                </div>
         </div>
-        <div id="logs">Caricamento log...</div>
+
+        <div class="card">
+            <h2>🚌 Passeggeri a Bordo (Live)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Utente</th>
+                        <th>Tratta</th> <th>Pax</th>
+                        <th>Costo</th>
+                    </tr>
+                </thead>
+                <tbody id="table-active"></tbody>
+            </table>
+        </div>
+
+        <div class="card full-width">
+            <h2>📜 Storico Viaggi</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Utente</th>
+                        <th>Tratta</th> <th>Orario</th>
+                        <th>Pax</th>
+                        <th>Totale</th>
+                        <th>Stato</th>
+                    </tr>
+                </thead>
+                <tbody id="table-history"></tbody>
+            </table>
+        </div>
+
+        <div class="card full-width">
+            <h2>💻 System Logs</h2>
+            <div id="logs-raw"></div>
+        </div>
     </div>
 
     <script>
         const API_URL = 'http://localhost:3000/api';
+        let allRoutes = [];
 
-        // Carica il prezzo attuale
-        async function fetchPrice() {
+        async function updateDashboard() {
             try {
-                const res = await fetch(`${API_URL}/admin/config`);
+                const res = await fetch(`${API_URL}/admin/dashboard`);
                 const data = await res.json();
-                document.getElementById('current-price').innerText = data.costPerSecond;
-                document.getElementById('new-price').value = data.costPerSecond;
-            } catch(e) { console.error(e); }
-        }
+                
+                // Aggiorna variabili locali
+                allRoutes = data.routes || [];
 
-        // Aggiorna il prezzo
-        async function updatePrice() {
-            const price = parseFloat(document.getElementById('new-price').value);
-            if(!price || price <= 0) return alert("Inserisci un prezzo valido!");
+                // 1. Stats
+                document.getElementById('stat-pax').innerText = data.activeTrips.reduce((acc, t) => acc + t.passengers, 0);
+                document.getElementById('stat-price').innerText = data.config.costPerSecond + " IOTA/s";
+                
+                let revenueHistory = data.history.reduce((acc, t) => acc + parseFloat(t.cost), 0);
+                let revenueActive = data.activeTrips.reduce((acc, t) => acc + parseFloat(t.currentCost), 0);
+                document.getElementById('stat-revenue').innerText = (revenueHistory + revenueActive).toFixed(2);
 
-            try {
-                const res = await fetch(`${API_URL}/admin/config`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ costPerSecond: price })
-                });
-                const data = await res.json();
-                if(data.ok) {
-                    alert("✅ Tariffa aggiornata!");
-                    fetchPrice();
+                // 2. Select Tratta Attiva
+                const select = document.getElementById('route-select');
+                // Salva selezione corrente se l'utente sta interagendo, altrimenti aggiorna
+                if (document.activeElement !== select) {
+                    select.innerHTML = `<option value="MANUAL">-- Configurazione Manuale --</option>` + 
+                        allRoutes.map(r => `<option value="${r.id}" ${r.id === data.config.currentRouteId ? 'selected' : ''}>${r.name} (${r.costPerSecond}/s)</option>`).join('');
                 }
-            } catch(e) { alert("Errore aggiornamento"); }
+
+                // 3. Lista Gestione Tratte
+                document.getElementById('routes-list').innerHTML = allRoutes.map(r => `
+                    <div class="route-item">
+                        <span><strong>${r.name}</strong> <small>(${r.costPerSecond}/s)</small></span>
+                        <button class="danger" onclick="deleteRoute('${r.id}')" style="padding: 2px 8px; font-size: 0.7rem;">X</button>
+                    </div>
+                `).join('');
+
+                // 4. Active Trips
+                const tbodyActive = document.getElementById('table-active');
+                if (data.activeTrips.length === 0) tbodyActive.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#555;">Bus Vuoto</td></tr>';
+                else tbodyActive.innerHTML = data.activeTrips.map(t => `
+                    <tr>
+                        <td><b>${t.user}</b></td>
+                        <td>${t.routeName || '-'}</td>
+                        <td>${t.passengers}</td>
+                        <td class="live-cost">${t.currentCost}</td>
+                    </tr>`).join('');
+
+                // 5. History
+                document.getElementById('table-history').innerHTML = data.history.map(t => `
+                    <tr>
+                        <td>${t.user}</td>
+                        <td>${t.route || '-'}</td>
+                        <td>${t.endTime}</td>
+                        <td>${t.passengers}</td>
+                        <td><b>${t.cost}</b></td>
+                        <td><span class="status-badge ${t.status==='FULL'?'status-ok':'status-debt'}">${t.status}</span></td>
+                    </tr>`).join('');
+
+                document.getElementById('logs-raw').innerHTML = data.logs.join('<br>');
+
+            } catch (e) { console.error(e); }
         }
 
-        // Carica i Log
-        async function fetchLogs() {
-            try {
-                const res = await fetch(`${API_URL}/admin/logs`);
-                const data = await res.json();
-                const logBox = document.getElementById('logs');
-                
-                logBox.innerHTML = data.logs.map(log => {
-                    let className = 'log-entry';
-                    if(log.includes("✅")) className += ' success';
-                    if(log.includes("❌") || log.includes("⚠️")) className += ' error';
-                    if(log.includes("💸")) className += ' highlight';
-                    return `<div class="${className}">${log}</div>`;
-                }).join('');
-                
-                // Scroll to bottom
-                logBox.scrollTop = logBox.scrollHeight;
-            } catch(e) { console.error(e); }
+        // AZIONI
+
+        async function applyRoute() {
+            const routeId = document.getElementById('route-select').value;
+            if (routeId === "MANUAL") return alert("Usa la vecchia config manuale se vuoi (non impl. qui per pulizia)");
+            
+            const route = allRoutes.find(r => r.id === routeId);
+            if (!route) return;
+
+            await fetch(`${API_URL}/admin/config`, {
+                method: 'POST', headers: {'Content-Type':'application/json'}, 
+                body: JSON.stringify({ costPerSecond: route.costPerSecond, routeId: route.id })
+            });
+            updateDashboard();
         }
 
-        // Auto-refresh ogni 2 secondi
-        setInterval(fetchLogs, 2000);
-        fetchPrice();
-        fetchLogs();
+        async function addRoute() {
+            const name = document.getElementById('new-route-name').value;
+            const cost = document.getElementById('new-route-cost').value;
+            if(!name || !cost) return alert("Compila tutto");
+
+            await fetch(`${API_URL}/admin/routes`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ name, cost })
+            });
+            document.getElementById('new-route-name').value = "";
+            document.getElementById('new-route-cost').value = "";
+            updateDashboard();
+        }
+
+        async function deleteRoute(id) {
+            if(!confirm("Eliminare tratta?")) return;
+            await fetch(`${API_URL}/admin/routes/${id}`, { method: 'DELETE' });
+            updateDashboard();
+        }
+
+        setInterval(updateDashboard, 1000);
+        updateDashboard();
     </script>
 </body>
 </html>
