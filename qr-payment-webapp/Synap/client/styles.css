@@ -1,150 +1,278 @@
+/* FONT & RESET */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
 :root {
-    --primary: #007AFF;    /* Blu Apple */
-    --danger: #FF3B30;     /* Rosso Alert */
-    --bg: #F2F2F7;         /* Grigio iOS */
-    --card: #FFFFFF;
-    --text: #000000;
-    --gray: #8E8E93;
+    /* Background (Pastel) */
+    --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+    
+    /* Card */
+    --card-bg: #ffffff;
+    --card-shadow: 0 10px 40px rgba(142, 197, 252, 0.3);
+    
+    /* Text */
+    --text-dark: #2d3436;
+    --text-muted: #636e72;
+    --text-light: #ffffff;
+
+    /* Buttons & Accent */
+    --btn-primary: linear-gradient(90deg, #a18cd1 0%, #fbc2eb 100%);
+    --btn-danger: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+    --btn-secondary: #f1f2f6;
+    
+    /* Input */
+    --input-bg: #f1f2f6;
+    --input-border: #dfe6e9;
 }
 
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent; /* Rimuove flash al tocco su mobile */
-}
+* { box-sizing: border-box; }
 
 body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-dark);
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    height: 100vh; /* Occupa tutto lo schermo */
-    overflow: hidden; /* Evita scroll della pagina intera */
+    padding: 0;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
 }
 
-/* HEADER FISSO IN ALTO */
+/* --- HEADER --- */
 .topbar {
-    background: var(--card);
-    padding: 15px;
-    padding-top: max(15px, env(safe-area-inset-top)); /* Rispetta il notch iPhone */
+    width: 100%;
+    padding: 20px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #E5E5EA;
-    z-index: 100;
+    position: absolute; 
+    top: 0;
+    z-index: 10;
 }
 
-.brand { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.5px; }
-.accent { color: var(--primary); }
-
-.btn-logout {
-    background: #E5E5EA;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 14px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text);
-}
-
-/* CONTENITORE PRINCIPALE SCROLLABILE */
-main {
-    flex: 1;
-    overflow-y: auto;
-    position: relative;
-    padding-bottom: 20px;
-}
-
-/* LE SCHERMATE */
-.view {
-    display: none;
-    min-height: 100%;
-    padding: 20px;
-    flex-direction: column;
+.brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
     align-items: center;
-    justify-content: center;
-    animation: slideIn 0.3s ease-out;
+    gap: 8px;
 }
 
-.view.active { display: flex; }
+.logo-icon { color: #a18cd1; }
 
-@keyframes slideIn {
+.user-profile { font-size: 0.9rem; color: var(--text-dark); display: flex; align-items: center; gap: 10px; }
+.btn-logout { 
+    background: rgba(255,255,255,0.3); 
+    border: 1px solid rgba(255,255,255,0.5); 
+    color: var(--text-dark); 
+    padding: 5px 15px; 
+    border-radius: 20px; 
+    cursor: pointer; 
+    font-weight: 600;
+    backdrop-filter: blur(5px);
+}
+
+/* --- LAYOUT & CARDS --- */
+main { 
+    width: 100%; 
+    max-width: 450px; 
+    padding: 80px 20px 20px 20px; 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+}
+
+.view { 
+    display: none; 
+    height: 100%;
+    flex-direction: column;
+}
+.view.active { 
+    display: flex; 
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* CARD APP-STYLE */
 .card {
-    background: var(--card);
-    border-radius: 20px;
-    padding: 25px;
-    width: 100%;
-    max-width: 100%; /* Occupa larghezza su mobile */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    background: var(--card-bg);
+    border-radius: 30px;
+    padding: 30px;
+    margin-bottom: 20px;
     text-align: center;
-    margin-bottom: 15px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255,255,255,0.5);
 }
 
-/* INPUT GIGANTI PER DITA */
+h1 { font-size: 1.8rem; margin-bottom: 5px; font-weight: 700; color: var(--text-dark); }
+h2 { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 20px; font-weight: 600; }
+.status-text { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px; }
+
+/* --- INPUTS --- */
 input {
     width: 100%;
-    padding: 16px; /* Più spazio per digitare */
-    margin: 10px 0 20px 0;
-    border: 1px solid #C7C7CC;
-    border-radius: 12px;
-    font-size: 16px; /* Evita lo zoom automatico su iPhone */
-    background: #F2F2F7;
-    appearance: none;
+    padding: 16px;
+    margin-bottom: 15px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 15px;
+    color: var(--text-dark);
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+    font-family: inherit;
+}
+input:focus { 
+    background: white; 
+    border-color: #a18cd1; 
+    box-shadow: 0 0 0 4px rgba(161, 140, 209, 0.1); 
 }
 
-/* BOTTONI MODERNI */
+/* --- BUTTONS --- */
 .btn {
     width: 100%;
-    padding: 18px; /* Bottoni alti */
+    padding: 18px;
     border: none;
-    border-radius: 14px;
-    font-size: 1.1rem;
-    font-weight: 600;
+    border-radius: 15px;
+    font-size: 1rem;
+    font-weight: 700;
     cursor: pointer;
-    margin-bottom: 12px;
-    transition: transform 0.1s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    color: white;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.btn:active { transform: scale(0.98); }
+
+.primary { background: var(--btn-primary); }
+.danger { background: var(--btn-danger); }
+.secondary { 
+    background: var(--btn-secondary); 
+    color: var(--text-dark); 
+    box-shadow: none; 
 }
 
-.btn:active { transform: scale(0.97); }
+.link { 
+    background: none; 
+    border: none; 
+    color: #a18cd1; 
+    cursor: pointer; 
+    font-weight: 600;
+    font-size: 0.9rem; 
+}
 
-.primary { background-color: var(--primary); color: white; }
-.danger { background-color: var(--danger); color: white; }
-.secondary { background-color: var(--gray); color: white; }
-.link { background: none; color: var(--primary); box-shadow: none; font-size: 0.9rem; }
+/* --- IOTA FOOTER (TEXT) --- */
+.iota-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
 
-/* DASHBOARD SPECIFICI */
-.balance { font-size: 3rem; font-weight: 800; color: var(--text); letter-spacing: -1px; margin: 10px 0; }
-.currency { font-size: 1.2rem; color: var(--gray); font-weight: 500; }
+/* --- HOME --- */
+.balance { 
+    font-size: 3.5rem; 
+    font-weight: 700; 
+    margin: 10px 0; 
+    color: #2d3436; 
+}
+.currency { 
+    font-size: 1.2rem; 
+    color: #b2bec3; 
+    font-weight: 500; 
+}
 
-/* SCANNER */
+/* --- TRIP VIEW (ANIMATIONS) --- */
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+.bus-animation {
+    display: inline-block;
+    animation: bounce 1.5s infinite ease-in-out;
+    font-size: 60px;
+}
+
+/* --- SCANNER --- */
 #reader {
-    width: 100%;             /* Larghezza piena */
-    min-height: 350px;       /* <--- FONDAMENTALE: Altezza minima fissa */
-    background-color: black; /* Sfondo nero per vederlo subito */
+    width: 100%;
     border-radius: 20px;
     overflow: hidden;
-    margin-bottom: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    position: relative;      /* Per posizionare gli elementi interni della libreria */
+    margin-bottom: 0;
+    border: 4px solid white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-/* VIAGGIO */
-.pulsate { border: 2px solid var(--primary); animation: pulse 1.5s infinite; }
-.timer { font-size: 3.5rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 20px 0; letter-spacing: -2px; }
+/* --- POPUP MODAL --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(45, 52, 54, 0.4);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.3s; }
+.modal-content {
+    background: white;
+    border-radius: 30px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 350px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-icon { font-size: 3.5rem; margin-bottom: 15px; }
+.modal-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; color: var(--text-dark); }
+.modal-msg { color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4); }
-    70% { box-shadow: 0 0 0 20px rgba(0, 122, 255, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
+/* --- UTILS --- */
+.slim-btn-circle {
+    width: 50px !important;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 
-/* UTILITY */
-h1, h2 { margin-top: 0; }
-.status-text { color: var(--gray); font-weight: 500; }
+.gradient-text {
+    background: var(--btn-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ========================================= */
+/* ADMIN DASHBOARD UTILITIES           */
+/* ========================================= */
+
+/* Scrollbar personalizzata per tabelle eleganti */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f1f2f6; }
+::-webkit-scrollbar-thumb { background: #d1d8e0; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #a18cd1; }
+
+/* Adattamento responsive per desktop */
+@media (min-width: 768px) {
+    /* La main dell'admin può espandersi, mentre quella dell'app mobile resta stretta */
+    body:has(.admin-grid) main {
+        max-width: 1200px !important;
+    }
+}

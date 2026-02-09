@@ -63,5 +63,60 @@
     "cost": "0.10",
     "status": "FULL",
     "tx": "CFWkCaCX..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Urbana (Centro)",
+    "startTime": "4:36:02 PM",
+    "endTime": "4:36:19 PM",
+    "duration": 16,
+    "passengers": 1,
+    "cost": "0.32",
+    "status": "FULL",
+    "tx": "CxRniQMn..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Urbana (Centro)",
+    "startTime": "4:36:29 PM",
+    "endTime": "4:36:37 PM",
+    "duration": 7,
+    "passengers": 2,
+    "cost": "0.28",
+    "status": "FULL",
+    "tx": "7MUyvrbn..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Urbana (Centro)",
+    "startTime": "4:41:18 PM",
+    "endTime": "4:41:33 PM",
+    "duration": 14,
+    "passengers": 1,
+    "cost": "0.28",
+    "status": "FULL",
+    "tx": "7o6rarLP..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Urbana (Centro)",
+    "startTime": "4:45:40 PM",
+    "endTime": "4:45:49 PM",
+    "duration": 7,
+    "passengers": 2,
+    "cost": "0.28",
+    "status": "FULL",
+    "tx": "8wntdzUG..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Milano - Roma",
+    "startTime": "4:48:21 PM",
+    "endTime": "4:48:37 PM",
+    "duration": 14,
+    "passengers": 1,
+    "cost": "0.84",
+    "status": "PARTIAL/DEBT",
+    "tx": "DCnCZ7sM..."
   }
 ]

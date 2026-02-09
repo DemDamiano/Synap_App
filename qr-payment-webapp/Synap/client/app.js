@@ -1,5 +1,5 @@
 // ==========================================
-//           CONFIGURAZIONE
+//           CONFIGURATION
 // ==========================================
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -22,12 +22,38 @@ const views = {
     result: document.getElementById('view-result')
 };
 
+// --- POPUP MANAGEMENT ---
+function showPopup(title, msg, type = 'info') {
+    const modal = document.getElementById('custom-modal');
+    const mTitle = document.getElementById('modal-title');
+    const mMsg = document.getElementById('modal-msg');
+    const mIcon = document.getElementById('modal-icon');
+
+    mTitle.innerText = title;
+    mMsg.innerHTML = msg; 
+    
+    if (type === 'error') {
+        mIcon.innerText = '❌';
+    } else if (type === 'success') {
+        mIcon.innerText = '✅';
+    } else {
+        mIcon.innerText = 'ℹ️';
+    }
+
+    modal.classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('custom-modal').classList.remove('open');
+}
+
+// NAVIGATION
 function showView(viewName) {
     Object.values(views).forEach(el => el.classList.remove('active'));
     if (views[viewName]) views[viewName].classList.add('active');
 }
 
-// SINCRONIZZA PREZZO
+// SYNC PRICE
 async function syncPrice() {
     try {
         const response = await fetch(`${API_BASE_URL}/admin/config`);
@@ -36,31 +62,32 @@ async function syncPrice() {
     } catch (e) {}
 }
 
-// GESTIONE PASSEGGERI
+// PASSENGERS
 function changePassenger(delta) {
     selectedPassengers += delta;
     if (selectedPassengers < 1) selectedPassengers = 1;
     if (selectedPassengers > 10) selectedPassengers = 10;
-    
     const display = document.getElementById('passenger-count-display');
-    if (display) {
-        display.innerText = selectedPassengers;
-    }
+    if (display) display.innerText = selectedPassengers;
 }
 
 // AUTH
 async function handleLogin(event) {
     event.preventDefault();
     const btn = document.querySelector('#login-form button');
+    const oldText = btn.innerText;
     btn.innerText = "..."; btn.disabled = true;
+    
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+
     try {
         const res = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ email, password })
         });
         const data = await res.json();
+        
         if (res.ok) {
             localStorage.setItem('synap_token', data.token);
             localStorage.setItem('synap_user', data.user);
@@ -70,17 +97,25 @@ async function handleLogin(event) {
             showView('home');
             refreshBalance();
             syncPrice();
-        } else alert(data.error);
-    } catch (e) {} finally { btn.innerText = "Accedi"; btn.disabled = false; }
+        } else {
+            showPopup("Login Error", data.error, 'error');
+        }
+    } catch (e) {
+        showPopup("Error", "Cannot connect to server", 'error');
+    } finally { 
+        btn.innerText = oldText; btn.disabled = false; 
+    }
 }
 
 async function handleRegister(event) {
     event.preventDefault();
     const btn = document.querySelector('#register-form button');
     btn.innerText = "..."; btn.disabled = true;
+    
     const name = document.getElementById('reg-name').value;
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
+    
     try {
         const res = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -88,39 +123,42 @@ async function handleRegister(event) {
         });
         const data = await res.json();
         if (res.ok) {
-            alert("Registrato!"); showView('login'); document.getElementById('register-form').reset();
-        } else alert(data.error);
-    } catch (e) {} finally { btn.innerText = "Registrati"; btn.disabled = false; }
+            showPopup("Registered!", "Account created successfully. Please login.", 'success');
+            showView('login'); 
+            document.getElementById('register-form').reset();
+        } else {
+            showPopup("Registration Error", data.error, 'error');
+        }
+    } catch (e) {
+        showPopup("Error", "Cannot connect to server", 'error');
+    } finally { 
+        btn.innerText = "Sign Up"; btn.disabled = false; 
+    }
 }
 
 function handleLogout() { stopTripTimer(); localStorage.clear(); location.reload(); }
 function updateUIProfile() { 
     const el = document.querySelector('.user-name'); 
-    if(el) el.innerText = currentUser || 'Ospite'; 
+    if(el) el.innerText = currentUser || 'Guest'; 
 }
 
-// SCANNER
+// SCANNER (UPDATED: Hides passenger selection on checkout)
 function startScanner(mode) {
     scanMode = mode || 'START';
-    const title = document.querySelector('#view-scan h2');
     const manualInput = document.getElementById('manual-code-input');
-    const passengerSelector = document.getElementById('passenger-selector-container');
-
+    const passengerBox = document.getElementById('passenger-selection-box');
+    
     if (scanMode === 'END') {
-        title.innerText = "🛑 SCANSIONA USCITA (OUT)"; 
-        title.style.color = "red";
-        if(manualInput) manualInput.placeholder = "Es. OUT-BUS-01";
-        if(passengerSelector) passengerSelector.style.display = 'none';
-
+        if(manualInput) manualInput.placeholder = "Eg. OUT-BUS-01";
+        // HIDE passenger selector on exit
+        if(passengerBox) passengerBox.style.display = 'none';
     } else {
-        title.innerText = "🟢 SCANSIONA ENTRATA (IN)"; 
-        title.style.color = "var(--primary)";
-        if(manualInput) manualInput.placeholder = "Es. IN-BUS-01";
-        if(passengerSelector) passengerSelector.style.display = 'block';
+        if(manualInput) manualInput.placeholder = "Eg. IN-BUS-01";
+        // SHOW passenger selector on entry
+        if(passengerBox) passengerBox.style.display = 'block';
     }
 
     showView('scan');
-    
     const passDisplay = document.getElementById('passenger-count-display');
     if(passDisplay) passDisplay.innerText = selectedPassengers;
 
@@ -128,19 +166,22 @@ function startScanner(mode) {
     setTimeout(() => {
         html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, ()=>{})
-        .catch(err => alert("Errore fotocamera"));
+        .catch(err => showPopup("Camera Error", "Cannot start camera", 'error'));
     }, 300);
 }
+
 function stopScanner() { if (html5QrCode) html5QrCode.stop().then(() => { html5QrCode.clear(); html5QrCode = null; }).catch(()=>{}); }
+
 function onScanSuccess(t) {
-    if (scanMode === 'START' && !t.startsWith('IN-')) return alert("Usa codice IN");
-    if (scanMode === 'END' && !t.startsWith('OUT-')) return alert("Usa codice OUT");
+    if (scanMode === 'START' && !t.startsWith('IN-')) return showPopup("Wrong Code", "You must scan an <b>ENTRY (IN)</b> code", 'error');
+    if (scanMode === 'END' && !t.startsWith('OUT-')) return showPopup("Wrong Code", "You must scan an <b>EXIT (OUT)</b> code", 'error');
     stopScanner();
     (scanMode === 'START') ? startTrip(t) : endTrip(t);
 }
+
 function handleManualEntry() { const v = document.getElementById('manual-code-input').value.toUpperCase(); if(v) onScanSuccess(v); }
 
-// VIAGGIO E TIMER
+// TRIP & TIMER
 function startTripTimer() {
     tripStartTime = Date.now();
     const timerEl = document.getElementById('trip-timer');
@@ -154,7 +195,6 @@ function startTripTimer() {
         const min = Math.floor(diff / 60).toString().padStart(2, '0');
         const sec = (diff % 60).toString().padStart(2, '0');
         timerEl.innerText = `${min}:${sec}`;
-        
         const currentCost = (diff * pricePerSecond * selectedPassengers);
         costEl.innerText = currentCost.toFixed(2);
     }, 1000);
@@ -164,7 +204,7 @@ function stopTripTimer() { if (tripInterval) { clearInterval(tripInterval); trip
 async function startTrip(qrData) {
     try {
         const email = localStorage.getItem('synap_email');
-        if(!email) throw new Error("Utente non loggato");
+        if(!email) throw new Error("User not logged in");
         await syncPrice();
         
         const res = await fetch(`${API_BASE_URL}/trip/start`, {
@@ -173,24 +213,21 @@ async function startTrip(qrData) {
         });
         const data = await res.json();
 
-        if (res.status === 403 && data.error === "DEBITO_PENDENTE") {
-            alert("⛔ " + data.message); showView('home'); return;
+        if (res.status === 403 && data.error === "PENDING_DEBT") {
+            showPopup("⛔ Stop!", data.message, 'error');
+            showView('home'); 
+            return;
         }
 
         if (data.status === 'STARTED') {
             currentTripId = data.tripId; 
             showView('trip'); 
             
-            // AGGIORNAMENTO UI
             const idDisp = document.getElementById('trip-id-display');
             if(idDisp) idDisp.innerText = qrData;
             
-            // <--- QUI AGGIORNIAMO IL TESTO DELLA TRATTA --->
             const routeDisp = document.getElementById('trip-route-display');
-            if(routeDisp) {
-                // Se la rotta è definita la mostra, altrimenti mette un default
-                routeDisp.innerText = data.routeName || "Tariffa Standard"; 
-            }
+            if(routeDisp) routeDisp.innerText = data.routeName || "Standard"; 
             
             const passDisp = document.getElementById('trip-passengers-display');
             if(passDisp) passDisp.innerText = selectedPassengers;
@@ -200,14 +237,17 @@ async function startTrip(qrData) {
 
             startTripTimer();
         } else throw new Error(data.error);
-    } catch (e) { alert("Errore: " + e.message); showView('home'); }
+    } catch (e) { 
+        showPopup("Start Error", e.message, 'error'); 
+        showView('home'); 
+    }
 }
 
 async function endTrip(qrData) {
     stopTripTimer();
     showView('result');
     const box = document.querySelector('.ticket');
-    box.innerHTML = `<div class="loader"></div><h3>Calcolo Pagamento...</h3>`;
+    box.innerHTML = `<div class="loader" style="color:#636e72; text-align:center; padding:20px;">Calculating Payment...</div>`;
 
     try {
         const email = localStorage.getItem('synap_email');
@@ -218,25 +258,36 @@ async function endTrip(qrData) {
         const data = await res.json();
 
         if (data.ok) {
-            let icon = "✅"; let color = "var(--primary)"; let title = "Pagato!"; let note = "";
+            let icon = "✅"; 
+            let color = "#a18cd1"; 
+            let title = "PAID!"; 
+            let note = "";
+
             if (parseFloat(data.debt) > 0) {
-                icon = "⚠️"; color = "#FF3B30"; title = "Pagamento Parziale";
-                note = `<p style="color:red; font-weight:bold; margin-top:10px;">Saldo insufficiente.<br>Nuovo Debito: ${data.debt}</p>`;
+                icon = "⚠️"; 
+                color = "#ff7675"; 
+                title = "PARTIAL";
+                note = `<p style="color:#d63031; font-weight:600; margin-top:15px; background:#ffecec; padding:10px; border-radius:10px;">Insufficient balance.<br>New Debt: ${data.debt}</p>`;
             } 
 
             box.innerHTML = `
-                <div style="font-size: 60px;">${icon}</div>
-                <h2 style="color:${color}">${title}</h2>
-                <p class="balance">-${data.paid} <small>IOTA</small></p>
-                <p>Costo Totale: ${data.cost}</p>
+                <div style="font-size: 60px; margin-bottom:10px;">${icon}</div>
+                <h2 style="color:${color}; font-weight:700; letter-spacing:1px; margin-bottom:15px;">${title}</h2>
+                <div style="background:#f1f2f6; padding:25px; border-radius:20px; margin-bottom:10px;">
+                    <p class="balance" style="font-size:3rem; margin:0; color:#2d3436; font-weight:700;">-${data.paid}</p>
+                    <p style="color:#b2bec3; margin-top:0;">IOTA</p>
+                    <div style="border-top:1px solid #dfe6e9; margin-top:15px; padding-top:15px; font-size:0.9rem; color:#636e72;">
+                        Total Cost: <strong>${data.cost}</strong>
+                    </div>
+                </div>
                 ${note}
-                ${data.explorerUrl ? `<a href="${data.explorerUrl}" target="_blank" class="btn secondary">Vedi su Blockchain</a>` : ''}
-                <button onclick="resetAppAndHome()" class="btn primary" style="margin-top:10px">Ok, ho capito</button>
+                ${data.explorerUrl ? `<a href="${data.explorerUrl}" target="_blank" class="btn secondary" style="margin-top:20px; display:inline-block; text-decoration:none; font-size:0.8rem;">🔗 View on Blockchain</a>` : ''}
+                <button onclick="resetAppAndHome()" class="btn primary" style="margin-top:20px">HOME</button>
             `;
             refreshBalance();
         } else throw new Error(data.error);
     } catch (e) {
-        box.innerHTML = `<h3 style="color:red">Errore</h3><p>${e.message}</p><button onclick="showView('home')" class="btn secondary">Home</button>`;
+        box.innerHTML = `<h3 style="color:#ff7675">Error</h3><p>${e.message}</p><button onclick="showView('home')" class="btn secondary">Home</button>`;
     }
 }
 
@@ -264,8 +315,8 @@ async function refreshBalance() {
 
 async function handlePayDebt() {
     const email = localStorage.getItem('synap_email');
-    if(!confirm("Vuoi usare il saldo per pagare il debito?")) return;
-    
+    if(!confirm("Do you confirm using your balance to pay off the debt?")) return;
+
     const btn = document.querySelector('#debt-warning button');
     const oldText = btn.innerText;
     btn.innerText = "..."; btn.disabled = true;
@@ -275,9 +326,13 @@ async function handlePayDebt() {
             method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email })
         });
         const data = await res.json();
-        if(res.ok) { alert("✅ " + data.message); refreshBalance(); }
-        else alert("❌ " + data.error);
-    } catch(e) { alert("Errore rete"); } 
+        if(res.ok) { 
+            showPopup("Debt Settled", data.message, 'success');
+            refreshBalance(); 
+        } else {
+            showPopup("Error", data.error, 'error');
+        }
+    } catch(e) { showPopup("Error", "Connection Error", 'error'); } 
     finally { btn.innerText = oldText; btn.disabled = false; }
 }
 
