@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synap Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ADMIN SPECIFIC OVERRIDES */
+        body { overflow-y: auto; } /* Allow scroll on desktop */
+        main { max-width: 1200px; padding-top: 100px; } /* Wider layout */
+        
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(142, 197, 252, 0.2);
+            text-align: center;
+        }
+
+        .stat-value { font-size: 2.5rem; font-weight: 700; background: var(--btn-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* TABLES */
+        .table-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid #f1f2f6; }
+        td { padding: 15px; color: var(--text-dark); border-bottom: 1px solid #f1f2f6; }
+        tr:last-child td { border-bottom: none; }
+        
+        .badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge-green { background: #dff9fb; color: #6ab04c; }
+        .badge-purple { background: #f3e5f5; color: #9c27b0; }
+
+        /* FORMS IN GRID */
+        .config-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .config-group input { margin-bottom: 0; }
+        .config-group button { width: auto; margin-bottom: 0; padding: 16px 25px; }
+
+        .route-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f1f2f6;
+        }
+        .route-item:last-child { border-bottom: none; }
+        .btn-small { padding: 5px 10px; font-size: 0.8rem; width: auto; margin: 0; }
+    </style>
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="brand">
+            <span class="logo-icon">❖</span> Synap <span style="font-weight: 300; margin-left: 5px; opacity: 0.7;">| Admin Dashboard</span>
+        </div>
+    </header>
+
+    <main>
+        
+        <div class="admin-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-pax">0</div>
+                <div class="stat-label">Live Passengers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-rate">0.00</div>
+                <div class="stat-label">Current Rate (IOTA/s)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-route">--</div>
+                <div class="stat-label">Active Route</div>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <div class="card" style="text-align: left;">
+                <h2>⚙️ Rate Configuration</h2>
+                <p class="status-text">Set the cost per second for the active trip.</p>
+                <div class="config-group">
+                    <input type="number" id="config-cost" step="0.0001" placeholder="0.01">
+                    <button onclick="updateConfig()" class="btn primary">Update</button>
+                </div>
+            </div>
+
+            <div class="card" style="text-align: left;">
+                <h2>🛣️ Route Manager</h2>
+                <div class="config-group" style="margin-bottom: 20px;">
+                    <input type="text" id="route-name" placeholder="Route Name (e.g. Line 4)">
+                    <input type="number" id="route-cost" step="0.01" placeholder="Cost" style="width: 100px;">
+                    <button onclick="addRoute()" class="btn primary">+</button>
+                </div>
+                <div id="routes-list" style="max-height: 200px; overflow-y: auto;">
+                    </div>
+            </div>
+        </div>
+
+        <h2 style="margin-left: 10px;">🚌 Passengers On Board</h2>
+        <div class="table-container" style="margin-bottom: 30px;">
+            <table id="live-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Started At</th>
+                        <th>Duration</th>
+                        <th>Est. Cost</th>
+                        <th>Pax</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+        <h2 style="margin-left: 10px;">📜 Recent History</h2>
+        <div class="table-container">
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Route</th>
+                        <th>Time</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th>TX</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="iota-footer" style="margin-top: 40px; margin-bottom: 20px;">
+            Powered by IOTA
+        </div>
+
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        async function fetchDashboard() {
+            try {
+                const res = await fetch(`${API_URL}/admin/dashboard`);
+                const data = await res.json();
+                renderDashboard(data);
+            } catch (e) { console.error("Connection error", e); }
+        }
+
+        function renderDashboard(data) {
+            // Stats
+            document.getElementById('stat-pax').innerText = data.activeTrips.length;
+            document.getElementById('stat-rate').innerText = data.config.costPerSecond;
+            document.getElementById('stat-route').innerText = data.config.currentRouteName;
+            
+            // Live Table
+            const liveBody = document.querySelector('#live-table tbody');
+            liveBody.innerHTML = '';
+            if(data.activeTrips.length === 0) {
+                liveBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#b2bec3;">No passengers on board</td></tr>';
+            } else {
+                data.activeTrips.forEach(t => {
+                    const row = `
+                        <tr>
+                            <td><strong>${t.user}</strong><br><small style="color:#b2bec3">${t.email}</small></td>
+                            <td>${new Date(t.startTime).toLocaleTimeString()}</td>
+                            <td><span class="badge badge-purple">${formatTime(t.duration)}</span></td>
+                            <td><strong>${t.currentCost}</strong> IOTA</td>
+                            <td>👤 ${t.passengers}</td>
+                        </tr>
+                    `;
+                    liveBody.innerHTML += row;
+                });
+            }
+
+            // History Table
+            const histBody = document.querySelector('#history-table tbody');
+            histBody.innerHTML = '';
+            data.history.forEach(h => {
+                let statusBadge = h.status === 'FULL' 
+                    ? `<span class="badge badge-green">PAID</span>` 
+                    : `<span class="badge" style="background:#ffecec; color:#d63031">DEBT</span>`;
+                
+                const row = `
+                    <tr>
+                        <td>${h.user}</td>
+                        <td>${h.route}</td>
+                        <td>${h.startTime} - ${h.endTime}</td>
+                        <td>${h.cost} IOTA</td>
+                        <td>${statusBadge}</td>
+                        <td><a href="#" style="color:#a18cd1; text-decoration:none;">${h.tx}</a></td>
+                    </tr>
+                `;
+                histBody.innerHTML += row;
+            });
+
+            // Routes List
+            const routesList = document.getElementById('routes-list');
+            routesList.innerHTML = '';
+            data.routes.forEach(r => {
+                const isSelected = r.id === data.config.currentRouteId;
+                const div = document.createElement('div');
+                div.className = 'route-item';
+                div.style.background = isSelected ? '#f1f2f6' : 'white';
+                div.innerHTML = `
+                    <div>
+                        <strong>${r.name}</strong> <small>(${r.costPerSecond} IOTA/s)</small>
+                        ${isSelected ? '<span class="badge badge-green" style="margin-left:5px">ACTIVE</span>' : ''}
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <button onclick="activateRoute('${r.id}', ${r.costPerSecond})" class="btn secondary btn-small">Select</button>
+                        <button onclick="deleteRoute('${r.id}')" class="btn danger btn-small">✖</button>
+                    </div>
+                `;
+                routesList.appendChild(div);
+            });
+        }
+
+        async function updateConfig() {
+            const cost = document.getElementById('config-cost').value;
+            if(!cost) return alert("Enter a value");
+            await fetch(`${API_URL}/admin/config`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ costPerSecond: cost })
+            });
+            fetchDashboard();
+            document.getElementById('config-cost').value = '';
+        }
+
+        async function addRoute() {
+            const name = document.getElementById('route-name').value;
+            const cost = document.getElementById('route-cost').value;
+            if(!name || !cost) return alert("Missing data");
+            await fetch(`${API_URL}/admin/routes`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ name, cost })
+            });
+            fetchDashboard();
+            document.getElementById('route-name').value = '';
+            document.getElementById('route-cost').value = '';
+        }
+
+        async function deleteRoute(id) {
+            if(!confirm("Delete route?")) return;
+            await fetch(`${API_URL}/admin/routes/${id}`, { method: 'DELETE' });
+            fetchDashboard();
+        }
+
+        async function activateRoute(id, cost) {
+            await fetch(`${API_URL}/admin/config`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ costPerSecond: cost, routeId: id })
+            });
+            fetchDashboard();
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2,'0');
+            const s = (seconds % 60).toString().padStart(2,'0');
+            return `${m}:${s}`;
+        }
+
+        // Auto Refresh
+        setInterval(fetchDashboard, 2000);
+        fetchDashboard();
+    </script>
+</body>
+</html>

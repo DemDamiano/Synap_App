@@ -1,0 +1,28 @@
+[
+  {
+    "email": "damiano.rovella@hotmail.com",
+    "password": "123",
+    "name": "Damiano",
+    "mnemonic": "organ screen story car during scavenge rigid box confirm old huge wealth",
+    "debt": 0
+  },
+  {
+    "email": "martina.frazzo@gmail.com",
+    "password": "123",
+    "name": "Martina",
+    "mnemonic": "scale original hero check alien damp trip guard absorb summer bird tuna",
+    "debt": 166.81
+  },
+  {
+    "email": "tizio@gmail.com",
+    "password": "123",
+    "name": "tizio",
+    "mnemonic": "romeo tango quebec echo sierra quebec echo foxtrot echo tango quebec whiskey"
+  },
+  {
+    "email": "piero@gmail.com",
+    "password": "123",
+    "name": "piero",
+    "mnemonic": "hotel golf india foxtrot victor whiskey lima victor uniform echo tango sierra"
+  }
+]
