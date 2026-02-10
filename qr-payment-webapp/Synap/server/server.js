@@ -84,15 +84,6 @@ function getCurrentRouteName() {
     return route ? route.name : "Manual Rate";
 }
 
-// --- LOGGING ---
-function log(message) {
-    const timestamp = new Date().toLocaleTimeString();
-    const formattedMsg = `[${timestamp}] ${message}`;
-    console.log(formattedMsg);
-    serverLogs.push(formattedMsg);
-    if (serverLogs.length > 50) serverLogs.shift();
-}
-
 function generateMockMnemonic() {
     const words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet", "kilo", "lima", "mike", "november", "oscar", "papa", "quebec", "romeo", "sierra", "tango", "uniform", "victor", "whiskey", "xray"];
     let mnemonic = [];
@@ -100,14 +91,95 @@ function generateMockMnemonic() {
     return mnemonic.join(" ");
 }
 
+// ==========================================
+//               LOGGING & UI
+// ==========================================
+
+const C = {
+    reset: "\x1b[0m", bright: "\x1b[1m", dim: "\x1b[2m",
+    cyan: "\x1b[36m", green: "\x1b[32m", yellow: "\x1b[33m",
+    red: "\x1b[31m", magenta: "\x1b[35m", blue: "\x1b[34m", white: "\x1b[37m"
+};
+
+// Funzione principale di Log Tabellare
+function log(message, type = 'info') {
+    const now = new Date();
+    const time = now.toLocaleTimeString('it-IT', { hour12: false });
+    
+    // Configurazioni per le colonne
+    let label = "INFO";
+    let color = C.white;
+    
+    switch(type) {
+        case 'error':  label = "ERROR";  color = C.red; break;
+        case 'success':label = "OK";     color = C.green; break;
+        case 'warn':   label = "WARN";   color = C.yellow; break;
+        case 'system': label = "SYSTEM"; color = C.cyan; break;
+        case 'trip':   label = "TRIP";   color = C.blue; break;
+        case 'money':  label = "MONEY";  color = C.magenta; break;
+    }
+
+    // Creazione colonne a larghezza fissa (Padding)
+    const colTime = `${C.dim} ${time} ${C.reset}`;
+    const colType = `${color}${label.padEnd(8)}${C.reset}`; // Forza larghezza 8 char
+    const separator = `${C.dim}│${C.reset}`;
+
+    // Stampa:  10:00:00 │ SYSTEM   │ Messaggio
+    console.log(`${colTime} ${separator} ${colType} ${separator} ${message}`);
+    
+    // Salva nel log interno per la dashboard admin (senza colori)
+    serverLogs.push(`[${time}] [${label}] ${message}`);
+    if (serverLogs.length > 50) serverLogs.shift();
+}
+
+// Helper per accorciare indirizzi
+function shortAddr(addr) {
+    if (!addr) return "Unknown";
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 6)}`;
+}
+
 async function init() {
-    log("-----------------------------------------");
-    log("🚌 BUS SERVER");
-    log(`✅  Active Route: ${getCurrentRouteName()} (${COSTO_AL_SECONDO} IOTA/s)`);
-    log("-----------------------------------------");
     client = new IotaClient({ url: NODE_URL });
     busKeypair = Ed25519Keypair.deriveKeypair(MNEMONIC_BUS);
-    log(`👮 COMPANY ACCOUNT: ${busKeypair.getPublicKey().toIotaAddress()}`);
+    const address = busKeypair.getPublicKey().toIotaAddress();
+    const routeName = getCurrentRouteName();
+
+    console.clear(); 
+
+    // --- DISEGNO IL BOX INIZIALE ---
+    const width = 60;
+    const b = `${C.cyan}║${C.reset}`;
+    const line = `${C.cyan}╠${"═".repeat(width)}╣${C.reset}`;
+    const top = `${C.cyan}╔${"═".repeat(width)}╗${C.reset}`;
+    const bot = `${C.cyan}╚${"═".repeat(width)}╝${C.reset}`;
+    const empty = `${b}${" ".repeat(width)}${b}`;
+
+    // Funzione helper per le righe del box
+    const row = (lbl, val, col = C.white) => {
+        const txt = `   ${lbl}`;
+        const valTxt = `${col}${val}${C.reset}`;
+        const padding = width - lbl.length - val.toString().length - 6; 
+        return `${b}${txt}${" ".repeat(Math.max(0, padding))}${valTxt}   ${b}`;
+    };
+
+    console.log(top);
+    console.log(`${b}   ✨ ${C.bright}SYNAP BUS SERVER${C.reset}${" ".repeat(width - 36)}v1.0.0 | ONLINE ${C.green}🟢${C.reset}   ${b}`);
+    console.log(line);
+    console.log(row("📍 ACTIVE ROUTE", routeName, C.yellow));
+    console.log(row("💰 CURRENT RATE", `${COSTO_AL_SECONDO} IOTA/s`, C.green));
+    console.log(empty);
+    console.log(row("👮 COMPANY WALLET", shortAddr(address), C.magenta));
+    console.log(line);
+    console.log(row("🌍 API ENDPOINT", `http://localhost:${PORT}`, C.blue));
+    console.log(row("⚙️  ADMIN PANEL", `http://localhost:${PORT}/admin.html`, C.blue));
+    console.log(bot);
+    
+    // --- DISEGNO L'INTESTAZIONE DELLA TABELLA LOG ---
+    console.log(""); // Spazio
+    console.log(`${C.dim} TIME     │ TYPE     │ LOG STREAM${C.reset}`);
+    console.log(`${C.dim}──────────┼──────────┼──────────────────────────────────────${C.reset}`);
+
+    log("Server initialized and ready...", "system");
 }
 init();
 
@@ -160,7 +232,7 @@ app.post('/api/admin/config', (req, res) => {
         });
 
         const routeName = getCurrentRouteName();
-        log(`⚙️ CONFIG CHANGE: ${routeName} -> ${COSTO_AL_SECONDO} IOTA/sec`);
+        log(`Rate updated: ${routeName} -> ${COSTO_AL_SECONDO} IOTA/s`, "warn");
         res.json({ ok: true });
     } else res.status(400).json({ error: "Invalid value" });
 });
@@ -178,7 +250,7 @@ app.post('/api/admin/routes', (req, res) => {
     
     routes.push(newRoute);
     saveRoutes(routes);
-    log(`🛣️ New Route Created: ${name}`);
+    log(`New Route created: ${name}`, "system");
     res.json({ ok: true, route: newRoute });
 });
 
@@ -186,7 +258,7 @@ app.delete('/api/admin/routes/:id', (req, res) => {
     const routes = loadRoutes();
     const newRoutes = routes.filter(r => r.id !== req.params.id);
     saveRoutes(newRoutes);
-    log(`🗑️ Route Deleted`);
+    log(`Route deleted`, "warn");
     res.json({ ok: true });
 });
 
@@ -210,7 +282,7 @@ app.post('/api/auth/register', (req, res) => {
 
         users.push({ email, password, name, mnemonic: newMnemonic, address: userAddress, debt: 0 });
         saveUsers(users);
-        log(`🆕 New User: ${name}`);
+        log(`New User registered: ${name}`, "system");
         res.json({ ok: true });
     } catch (e) { res.status(500).json({ error: "Server error" }); }
 });
@@ -220,7 +292,7 @@ app.post('/api/auth/login', (req, res) => {
     const users = loadUsers();
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
-        log(`🔑 Login: ${user.name}`);
+        log(`Login: ${user.name}`, "system");
         res.json({ token: "token-" + Date.now(), user: user.name, email: user.email });
     } else res.status(401).json({ error: "Invalid credentials" });
 });
@@ -233,7 +305,7 @@ app.post('/api/trip/start', (req, res) => {
     if (!user) return res.status(404).json({ error: "User unknown" });
 
     if (user.debt && user.debt > 0.001) { 
-        log(`⛔ Check-in blocked for ${user.name}: Debt ${user.debt}`);
+        log(`Check-in blocked for ${user.name}: Debt ${user.debt}`, "error");
         return res.status(403).json({ 
             error: "PENDING_DEBT", 
             message: `You have a debt of ${user.debt} IOTA. Please settle it to travel.` 
@@ -252,7 +324,7 @@ app.post('/api/trip/start', (req, res) => {
         routeName: currentRouteName
     };
     
-    log(`➡️ ENTRY: ${user.name} | Route: ${currentRouteName} | Pax: ${passengers || 1}`);
+    log(`ENTRY: ${user.name} | Route: ${currentRouteName} | Pax: ${passengers || 1}`, "trip");
     
     res.json({ 
         tripId: tripId, 
@@ -322,7 +394,12 @@ app.post('/api/trip/end', async (req, res) => {
         users[userIndex].debt = newDebtAmount;
         saveUsers(users);
 
-        log(`⬅️ EXIT: ${user.name}. Route: ${routeName}. Total: ${tripCost}`);
+        // LOG AGGIORNATO
+        if(paymentStatus === "FULL") {
+             log(`EXIT: ${user.name} | Paid: ${tripCost} IOTA`, "money");
+        } else {
+             log(`EXIT: ${user.name} | Partial Pay. Debt: ${newDebtAmount}`, "warn");
+        }
 
         if (tripData) {
             const newHistoryEntry = {
@@ -351,7 +428,7 @@ app.post('/api/trip/end', async (req, res) => {
         });
 
     } catch (e) {
-        log(`❌ ERROR: ${e.message}`);
+        log(`End Trip Error: ${e.message}`, "error");
         res.status(500).json({ error: e.message });
     }
 });
@@ -385,7 +462,9 @@ app.post('/api/user/pay-debt', async (req, res) => {
         let amountToPay = Math.min(walletBalance, user.debt);
         amountToPay = Math.floor(amountToPay * 100) / 100; 
         if (amountToPay < 0.01) return res.status(400).json({ error: "Balance too low." });
-        log(`💸 Manual Debt Payment: ${user.name} paying ${amountToPay}`);
+        
+        log(`Manual Debt Payment: ${user.name} paying ${amountToPay}`, "money");
+        
         const amountNano = Math.floor(amountToPay * 1e9);
         const tx = new Transaction();
         const [coin] = tx.splitCoins(tx.gas, [amountNano]);
@@ -397,12 +476,11 @@ app.post('/api/user/pay-debt', async (req, res) => {
         saveUsers(users);
         res.json({ ok: true, paid: amountToPay.toFixed(2), remainingDebt: user.debt.toFixed(2), message: `Paid ${amountToPay} IOTA.` });
     } catch (e) {
-        log(`❌ Debt Pay Error: ${e.message}`);
+        log(`Debt Pay Error: ${e.message}`, "error");
         res.status(500).json({ error: e.message });
     }
 });
 
 app.listen(PORT, () => {
-    log(`🌍 SERVER READY: http://localhost:${PORT}`);
-    log(`⚙️  ADMIN DASHBOARD: http://localhost:${PORT}/admin.html`);
+    // I log iniziali sono gestiti da init()
 });
