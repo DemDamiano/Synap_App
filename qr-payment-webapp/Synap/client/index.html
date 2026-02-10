@@ -60,35 +60,44 @@
             </div>
         </section>
 
-        <section id="view-home" class="view">
-            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <div class="card" style="padding: 40px 20px;">
-                    <p class="status-text" style="margin-bottom: 10px;">Your available balance</p>
-                    <div class="balance">
-                        <span id="balance-amount">0.00</span> 
+       <section id="view-home" class="view">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+        
+        <div class="card" style="padding: 40px 20px;">
+            <p class="status-text" style="margin-bottom: 10px;">Saldo Disponibile</p>
+            <div class="balance">
+                <span id="balance-amount">...</span> 
+            </div>
+            <span class="currency">IOTA</span>
+            
+            <div id="debt-warning" style="display: none; margin-top: 25px; animation: fadeIn 0.5s;">
+                <div style="background: #ffecec; border: 1px solid #fab1a0; border-radius: 15px; padding: 15px;">
+                    <div style="color: #d63031; font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">
+                        ⚠️ DEBITO: <span id="debt-amount">0.00</span>
                     </div>
-                    <span class="currency">IOTA</span>
-                    
-                    <div id="debt-warning" style="display: none; background: #fff0f0; border: 1px solid #ffcccc; padding: 15px; border-radius: 15px; margin-top: 25px;">
-                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px; color: #d63031;">
-                            DEBT: <span id="debt-amount">0.00</span>
-                        </div>
-                        <div style="font-size: 0.85rem; margin-bottom: 10px; color: #636e72;">
-                            Insufficient balance to travel.
-                        </div>
-                        <button onclick="handlePayDebt()" class="btn danger" style="font-size: 0.85rem; padding: 10px; margin-bottom: 0;">
-                            Pay Debt
-                        </button>
-                    </div>
+                    <p style="font-size: 0.85rem; color: #636e72; margin: 0 0 10px 0;">
+                        Devi saldare il debito prima di poter viaggiare di nuovo.
+                    </p>
+                    <button onclick="handlePayDebt()" class="btn danger" id="btn-pay-debt">
+                        SALDA DEBITO ORA
+                    </button>
                 </div>
-                
-                <button onclick="startScanner('START')" class="btn primary">SCAN QR (CHECK-IN)</button>
-                <p style="text-align: center; color: #b2bec3; font-size: 0.8rem; margin-top: 10px;">Or scan to check-out</p>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
-        </section>
+        </div>
+        
+        <button id="btn-scan-start" onclick="startScanner('START')" class="btn primary">
+            SCAN QR (CHECK-IN)
+        </button>
+        
+        <p style="text-align: center; color: #b2bec3; font-size: 0.8rem; margin-top: 10px;">
+            Oppure scansiona per uscire
+        </p>
+        <button onclick="startScanner('END')" class="btn secondary" style="padding: 10px;">
+            CHECK-OUT RAPIDO
+        </button>
+    </div>
+    <div class="iota-footer">Powered by IOTA</div>
+</section>
 
         <section id="view-scan" class="view">
             <div style="flex-grow: 1; display: flex; flex-direction: column;">

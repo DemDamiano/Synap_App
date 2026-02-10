@@ -291,49 +291,75 @@ async function endTrip(qrData) {
     }
 }
 
+// Aggiorna il saldo e controlla i debiti
 async function refreshBalance() {
     const email = localStorage.getItem('synap_email');
     if (!email) return;
-    const balanceEl = document.getElementById('balance-amount');
-    const debtBox = document.getElementById('debt-warning');
-    const debtAmount = document.getElementById('debt-amount');
-    if (balanceEl) balanceEl.style.opacity = "0.5";
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/user/balance`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if (data.balance) {
-            if(balanceEl) balanceEl.innerText = data.balance;
-            if (parseFloat(data.debt) > 0) {
-                debtBox.style.display = "block"; debtAmount.innerText = data.debt;
-            } else { debtBox.style.display = "none"; }
+    // Chiamata al server
+    const res = await apiCall('/user/balance', 'POST', { email });
+    
+    if (res.ok) {
+        // 1. Aggiorna il saldo a video
+        const balEl = document.getElementById('balance-amount');
+        if(balEl) balEl.innerText = res.data.balance;
+        
+        // 2. Gestione Debito
+        const debtBox = document.getElementById('debt-warning');
+        const scanBtn = document.getElementById('btn-scan-start');
+        const debtAmount = parseFloat(res.data.debt);
+
+        if (debtAmount > 0.00) {
+            // HA DEBITI: Mostra box rosso, disabilita Scan
+            if(debtBox) {
+                debtBox.style.display = 'block';
+                document.getElementById('debt-amount').innerText = res.data.debt;
+            }
+            if(scanBtn) {
+                scanBtn.disabled = true;
+                scanBtn.style.opacity = "0.5";
+                scanBtn.innerText = "BLOCCATO (DEBITO)";
+            }
+        } else {
+            // TUTTO OK: Nascondi box rosso, abilita Scan
+            if(debtBox) debtBox.style.display = 'none';
+            if(scanBtn) {
+                scanBtn.disabled = false;
+                scanBtn.style.opacity = "1";
+                scanBtn.innerText = "SCAN QR (CHECK-IN)";
+            }
         }
-    } catch (e) {} finally { if(balanceEl) balanceEl.style.opacity = "1"; }
+    }
 }
 
+// Gestisce il click sul pulsante "SALDA DEBITO ORA"
 async function handlePayDebt() {
+    const debtAmount = document.getElementById('debt-amount').innerText;
+    
+    if(!confirm(`Confermi di voler pagare ${debtAmount} IOTA per saldare il debito?`)) return;
+
+    const btn = document.getElementById('btn-pay-debt');
+    const originalText = btn.innerText;
+    btn.innerText = "Pagamento in corso...";
+    btn.disabled = true;
+
     const email = localStorage.getItem('synap_email');
-    if(!confirm("Do you confirm using your balance to pay off the debt?")) return;
+    const res = await apiCall('/user/pay-debt', 'POST', { email });
 
-    const btn = document.querySelector('#debt-warning button');
-    const oldText = btn.innerText;
-    btn.innerText = "..."; btn.disabled = true;
-
-    try {
-        const res = await fetch(`${API_BASE_URL}/user/pay-debt`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if(res.ok) { 
-            showPopup("Debt Settled", data.message, 'success');
-            refreshBalance(); 
-        } else {
-            showPopup("Error", data.error, 'error');
+    if (res.ok) {
+        showPopup("Debito Saldato! 🎉", `Hai pagato ${res.data.paid} IOTA. Ora puoi viaggiare.`, 'success');
+        refreshBalance(); // Aggiorna la UI
+    } else {
+        // Gestione errori specifici (es. Fondi insufficienti)
+        let msg = res.data.error;
+        if (msg.includes("Saldo insufficiente")) {
+            msg = "Non hai abbastanza IOTA nel wallet per pagare il debito.<br><br><b>Ricarica il tuo wallet tramite Faucet!</b>";
         }
-    } catch(e) { showPopup("Error", "Connection Error", 'error'); } 
-    finally { btn.innerText = oldText; btn.disabled = false; }
+        showPopup("Errore Pagamento", msg, 'error');
+    }
+
+    btn.innerText = originalText;
+    btn.disabled = false;
 }
 
 function resetAppAndHome() {

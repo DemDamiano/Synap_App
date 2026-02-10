@@ -1,17 +1,12 @@
 [
   {
-    "id": "route-1",
-    "name": "Cuneo - Torino",
+    "id": "r1",
+    "name": "Linea 1 - Centro",
     "costPerSecond": 0.01
   },
   {
-    "id": "route-2",
-    "name": "Urbana (Centro)",
-    "costPerSecond": 0.02
-  },
-  {
-    "id": "route-1770626149094",
-    "name": "Milano - Roma",
-    "costPerSecond": 0.06
+    "id": "route-1770741523484",
+    "name": "Linea 2 - Centro",
+    "costPerSecond": 0.001
   }
 ]

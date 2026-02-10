@@ -6,14 +6,16 @@ import 'dotenv/config';
 // Configurazioni IOTA
 const NODE_URL = process.env.NODE_URL || 'https://api.testnet.iota.cafe'; 
 const EXPLORER_URL = 'https://explorer.rebased.iota.org/txblock/';
-// Mnemonic del BUS (Azienda) - Assicurati che sia nel .env o qui
+
+// Mnemonic del BUS (Azienda)
+// Se non c'è nel .env, usa questa di default per la demo
 const MNEMONIC_BUS = process.env.MNEMONIC_BUS || "eternal clutch lock tunnel carpet dial repair popular exist monkey turkey bubble";
 
 let client = null;
 let busKeypair = null;
 let busAddress = null;
 
-// Funzione interna per generare una Mnemonic valida (Senza dipendere da Utils)
+// --- FUNZIONE GENERAZIONE MNEMONIC INTERNA (FIX PER L'ERRORE UTILS) ---
 function generateRandomMnemonic() {
     const words = [
         "alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", 
@@ -21,6 +23,7 @@ function generateRandomMnemonic() {
         "quebec", "romeo", "sierra", "tango", "uniform", "victor", "whiskey", "xray", 
         "yankee", "zulu", "apple", "banana", "cherry", "date", "elderberry", "fig"
     ];
+    // Ne prendiamo 12 a caso
     const mnemonic = [];
     for(let i=0; i<12; i++) { 
         mnemonic.push(words[Math.floor(Math.random() * words.length)]); 
@@ -37,15 +40,15 @@ export const IotaService = {
             busAddress = busKeypair.getPublicKey().toIotaAddress();
             return { connected: true, address: busAddress };
         } catch (e) {
-            console.error("IOTA Init Error:", e.message);
-            // Non blocchiamo l'app se la rete non va, torniamo false
+            // Se fallisce (es. niente internet), non crashiamo tutto
+            console.error("⚠️ IOTA Connection Warning:", e.message);
             return { connected: false, error: e.message };
         }
     },
 
     // 2. Genera un nuovo Wallet (Mnemonic + Address)
     createWallet() {
-        // Usiamo la nostra funzione interna invece di Utils che dava errore
+        // Usiamo la nostra funzione interna invece di quella che dava errore
         const mnemonic = generateRandomMnemonic(); 
         const keypair = Ed25519Keypair.deriveKeypair(mnemonic);
         const address = keypair.getPublicKey().toIotaAddress();
@@ -59,17 +62,15 @@ export const IotaService = {
             const keypair = Ed25519Keypair.deriveKeypair(mnemonic);
             const address = keypair.getPublicKey().toIotaAddress();
             
-            // Chiede al nodo tutti gli output
             const balances = await client.getAllBalances({ owner: address });
             const totalNano = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
             
             return {
-                iota: (totalNano / 1_000_000_000).toFixed(2), // Formattato per UI
-                nano: totalNano, // Grezzo per calcoli
+                iota: (totalNano / 1_000_000_000).toFixed(2), 
+                nano: totalNano,
                 raw: totalNano
             };
         } catch (e) {
-            console.error("Balance Check Error:", e.message);
             return { iota: "0.00", nano: 0 };
         }
     },
@@ -84,10 +85,8 @@ export const IotaService = {
             const tx = new Transaction();
             const [coin] = tx.splitCoins(tx.gas, [amountNano]);
             
-            // Trasferisce al BUS
             tx.transferObjects([coin], busAddress);
             
-            // Firma ed esegue
             const result = await client.signAndExecuteTransaction({ 
                 signer: userKeypair, 
                 transaction: tx 
