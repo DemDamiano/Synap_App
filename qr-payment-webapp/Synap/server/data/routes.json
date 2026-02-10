@@ -8,5 +8,10 @@
     "id": "route-1770741523484",
     "name": "Linea 2 - Centro",
     "costPerSecond": 0.001
+  },
+  {
+    "id": "route-1770750643592",
+    "name": "Cuneo - Milano",
+    "costPerSecond": 0.1
   }
 ]

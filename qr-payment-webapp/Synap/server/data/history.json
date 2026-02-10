@@ -129,5 +129,82 @@
     "cost": "0.11",
     "status": "FULL",
     "tx": "AaZTHG7f..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.09",
+    "paid": "0.09",
+    "status": "FULL",
+    "tx": "BGdeUXwUzPMn8B7eSRAKVp5tcHqYMoMMJDcedjGjNUif",
+    "startTime": "7:10:22 PM",
+    "endTime": "7:10:33 PM",
+    "date": "2026-02-10T18:10:33.149Z"
+  },
+  {
+    "user": "Damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.11",
+    "paid": "0.11",
+    "status": "FULL",
+    "tx": "6HX7iz1aKDWUSEdDwJRM3tia7GMsEGmB74qRaPaRNPrt",
+    "startTime": "8:03:49 PM",
+    "endTime": "8:04:01 PM",
+    "date": "2026-02-10T19:04:01.328Z"
+  },
+  {
+    "user": "Damiano",
+    "route": "Cuneo - Milano",
+    "cost": "0.70",
+    "paid": "0.27",
+    "status": "PARTIAL/DEBT",
+    "tx": "4HYkKwY2XjHgbX8iLjipnGLwJxkj6EQRRjpL5ToeMudP",
+    "startTime": "8:10:58 PM",
+    "endTime": "8:11:07 PM",
+    "date": "2026-02-10T19:11:07.710Z"
+  },
+  {
+    "user": "caio",
+    "route": "Cuneo - Milano",
+    "cost": "0.50",
+    "paid": "0.00",
+    "status": "DEBT_ONLY",
+    "tx": "N/A",
+    "startTime": "8:14:28 PM",
+    "endTime": "8:14:34 PM",
+    "date": "2026-02-10T19:14:34.732Z"
+  },
+  {
+    "user": "Martina",
+    "route": "Cuneo - Milano",
+    "cost": "0.70",
+    "paid": "0.70",
+    "status": "FULL",
+    "tx": "HRKN2bXxDSP6YRDGH4wcxYwyZyGWQHCyBwHtKpVLLaG1",
+    "startTime": "8:25:37 PM",
+    "endTime": "8:25:46 PM",
+    "date": "2026-02-10T19:25:46.344Z"
+  },
+  {
+    "user": "Martina",
+    "route": "Cuneo - Milano",
+    "cost": "5.60",
+    "paid": "5.60",
+    "status": "FULL",
+    "tx": "2aCt3RKDmpy9becy6We34mNCR2nYW48bbSRcnph79R3q",
+    "startTime": "8:34:00 PM",
+    "endTime": "8:34:31 PM",
+    "date": "2026-02-10T19:34:31.175Z"
+  },
+  {
+    "user": "Martina",
+    "route": "Linea 2 - Centro",
+    "cost": "0.17",
+    "paid": "0.17",
+    "status": "FULL",
+    "tx": "5WyHmRk2GwRcqiWfGT3aBhGtacf5NcZyt3TF91SLwMEo",
+    "startTime": "8:45:43 PM",
+    "endTime": "8:46:40 PM",
+    "date": "2026-02-10T19:46:40.718Z"
   }
 ]

@@ -74,19 +74,26 @@ init();
 
 app.get('/api/admin/dashboard', (req, res) => {
     const routes = Storage.loadRoutes();
+    
+    // Calcoliamo il totale reale delle persone a bordo (somma dei passeggeri di ogni viaggio)
+    const totalPeopleOnBoard = Object.values(activeTrips).reduce((acc, trip) => {
+        return acc + (trip.passengers || 1);
+    }, 0);
+
     const activeList = Object.values(activeTrips).map(trip => {
         const duration = Math.floor((Date.now() - trip.startTime) / 1000);
         const tripRate = trip.rate || COSTO_AL_SECONDO;
         return {
-            ...trip, duration,
+            ...trip,
+            duration,
             currentCost: (duration * tripRate * trip.passengers).toFixed(2)
         };
     });
 
     res.json({
         activeTrips: activeList,
+        totalPassengers: totalPeopleOnBoard, // Nuovo dato per la statistica
         history: tripHistory.slice().reverse(),
-        logs: getLogs(),
         routes: routes,
         config: {
             costPerSecond: COSTO_AL_SECONDO,
@@ -211,20 +218,39 @@ app.post('/api/user/pay-debt', async (req, res) => {
     }
 });
 
-app.post('/api/trip/start', (req, res) => {
+// --- TRIP FLOW ---
+
+app.post('/api/trip/start', async (req, res) => {
     const { email, passengers } = req.body;
     const users = Storage.loadUsers();
     const user = users.find(u => u.email === email);
+    
     if (!user) return res.status(404).json({ error: "User unknown" });
 
+    // 1. BLOCCO SE HA DEBITI PREGRESSI
     if (user.debt && user.debt > 0.01) {
-        log(`Check-in BLOCCATO per ${user.name}`, "error");
+        log(`Check-in BLOCCATO per ${user.name}: Debito ${user.debt}`, "error");
         return res.status(403).json({ 
             error: "PENDING_DEBT", 
-            message: `Saldare debito di ${user.debt} IOTA.` 
+            message: `Devi saldare un debito di ${user.debt} IOTA prima di viaggiare.` 
         });
     }
 
+    // 2. BLOCCO SE NON HA ABBASTANZA SOLDI (NUOVO!)
+    // Chiediamo alla Blockchain il saldo in tempo reale
+    const balData = await IotaService.getBalance(user.mnemonic);
+    const currentBalance = parseFloat(balData.iota);
+
+    // Soglia minima: 0.01 IOTA
+    if (currentBalance < 0.01) {
+        log(`Check-in BLOCCATO per ${user.name}: Saldo ${currentBalance} insufficiente`, "warn");
+        return res.status(403).json({ 
+            error: "LOW_FUNDS", 
+            message: `Saldo insufficiente (${currentBalance} IOTA).<br>Ricarica il wallet per viaggiare.` 
+        });
+    }
+
+    // 3. SE TUTTO OK, CREA IL VIAGGIO
     const tripId = "TRIP-" + Date.now();
     activeTrips[tripId] = {
         startTime: Date.now(),
@@ -233,7 +259,8 @@ app.post('/api/trip/start', (req, res) => {
         rate: COSTO_AL_SECONDO,
         routeName: getCurrentRouteName()
     };
-    log(`ENTRY: ${user.name}`, "trip");
+    
+    log(`ENTRY: ${user.name} | Saldo: ${currentBalance}`, "trip");
     res.json({ tripId, status: "STARTED", routeName: getCurrentRouteName() });
 });
 
@@ -306,6 +333,18 @@ app.post('/api/trip/end', async (req, res) => {
         paid: paidAmount.toFixed(2), debt: user.debt.toFixed(2),
         explorerUrl: txHash ? `https://explorer.rebased.iota.org/txblock/${txHash}?network=testnet` : null
     });
+});
+// Aggiungi questo in server.js sotto le altre API Admin
+app.get('/api/admin/users', (req, res) => {
+    const users = Storage.loadUsers();
+    // Creiamo una lista sicura (senza password/mnemonic) da mandare al frontend
+    const safeUsers = users.map(u => ({
+        name: u.name,
+        email: u.email,
+        address: u.address,
+        debt: u.debt || 0
+    }));
+    res.json(safeUsers);
 });
 
 app.listen(PORT, () => {});

@@ -4,38 +4,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
 :root {
-    /* Sfondo Generale (Pastello) */
     --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-    
-    /* Card & Surfaces */
     --card-bg: #ffffff;
     --card-shadow: 0 10px 40px rgba(142, 197, 252, 0.3);
-    
-    /* Text Colors */
     --text-dark: #2d3436;
     --text-muted: #636e72;
     --text-light: #ffffff;
-
-    /* Buttons & Accents */
     --btn-primary: linear-gradient(90deg, #a18cd1 0%, #fbc2eb 100%);
     --btn-danger: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
     --btn-secondary: #f1f2f6;
-    
-    /* Forms */
     --input-bg: #f1f2f6;
     --input-border: #dfe6e9;
-    
-    /* Dimensions */
     --header-height: 70px;
 }
 
 * { box-sizing: border-box; }
 
 html, body {
-    height: 100%; /* Forza altezza piena */
+    height: 100%; 
     margin: 0;
     padding: 0;
-    overflow: hidden; /* VIETA lo scroll della pagina intera (App feel) */
+    overflow: hidden; 
 }
 
 body {
@@ -47,9 +36,6 @@ body {
     align-items: center;
 }
 
-/* ========================================= */
-/* 2. HEADER (TOPBAR)                  */
-/* ========================================= */
 .topbar {
     width: 100%;
     height: var(--header-height);
@@ -84,14 +70,11 @@ body {
     backdrop-filter: blur(5px);
 }
 
-/* ========================================= */
-/* 3. MAIN LAYOUT CONTAINER            */
-/* ========================================= */
 main { 
     width: 100%; 
     max-width: 500px; 
-    height: 100%; /* Occupa tutto lo schermo */
-    padding-top: var(--header-height); /* Spazio per l'header */
+    height: 100%;
+    padding-top: var(--header-height);
     padding-bottom: 20px;
     padding-left: 20px;
     padding-right: 20px;
@@ -100,13 +83,12 @@ main {
     position: relative;
 }
 
-/* Gestione delle viste (Pagine) */
 .view { 
     display: none; 
-    height: 100%; /* Ogni vista occupa tutto lo spazio disponibile */
+    height: 100%;
     flex-direction: column;
-    overflow-y: auto; /* Abilita scroll solo dentro la vista se serve */
-    scrollbar-width: none; /* Nasconde scrollbar */
+    overflow-y: auto;
+    scrollbar-width: none;
 }
 .view::-webkit-scrollbar { display: none; }
 
@@ -117,9 +99,6 @@ main {
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ========================================= */
-/* 4. COMPONENTS (Cards, Inputs, Buttons) */
-/* ========================================= */
 .card {
     background: var(--card-bg);
     border-radius: 25px;
@@ -169,32 +148,22 @@ input:focus { background: white; border-color: #a18cd1; }
 
 .link { background: none; border: none; color: #a18cd1; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-top: 10px; }
 
-/* ========================================= */
-/* 5. VIEW SPECIFIC STYLES             */
-/* ========================================= */
-
-/* --- HOME --- */
 #view-home { justify-content: center; }
 .balance { font-size: 3.2rem; font-weight: 700; margin: 5px 0; color: #2d3436; }
 .currency { font-size: 1rem; color: #b2bec3; font-weight: 500; }
 
-/* --- SCANNER (FIT TO SCREEN LOGIC) --- */
 #view-scan {
-    overflow: hidden; /* No scroll allowed here */
-    justify-content: space-evenly; /* Distribute vertical space */
+    overflow: hidden;
+    justify-content: space-evenly;
     padding-bottom: 10px;
 }
 
-#view-scan h2 {
-    margin: 5px 0;
-    flex-shrink: 0;
-}
+#view-scan h2 { margin: 5px 0; flex-shrink: 0; }
 
-/* Il box scanner si adatta */
 #reader {
     width: 100%;
-    flex-grow: 1; /* Occupa tutto lo spazio disponibile */
-    max-height: 45vh; /* Ma non più del 45% dell'altezza */
+    flex-grow: 1;
+    max-height: 45vh;
     min-height: 200px;
     border-radius: 20px;
     overflow: hidden;
@@ -206,35 +175,11 @@ input:focus { background: white; border-color: #a18cd1; }
 }
 #reader video { object-fit: cover; width: 100%; height: 100%; }
 
-/* Input e Passeggeri compatti */
-.input-group-compact { flex-shrink: 0; width: 100%; padding: 0 5px; }
-.input-group-compact input { padding: 12px; margin-bottom: 8px; }
-.input-group-compact .btn { padding: 12px; margin-bottom: 5px; }
-
-.passengers-compact {
-    flex-shrink: 0;
-    background: white;
-    border-radius: 15px;
-    padding: 10px;
-    margin: 10px 5px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-}
-.passengers-compact p { margin: 0 0 5px 0; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
-.slim-btn-circle { width: 40px !important; height: 40px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin: 0; }
-.pax-count { font-size: 1.8rem; font-weight: 700; margin: 0 15px; background: var(--btn-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-/* --- TRIP VIEW --- */
 #view-trip { justify-content: center; }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 .bus-animation { display: inline-block; animation: bounce 1.5s infinite ease-in-out; font-size: 50px; }
 .gradient-text { background: var(--btn-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-/* ========================================= */
-/* 6. UTILS & FOOTER                   */
-/* ========================================= */
 .iota-footer {
     width: 100%;
     text-align: center;
@@ -245,10 +190,9 @@ input:focus { background: white; border-color: #a18cd1; }
     text-transform: uppercase;
     opacity: 0.5;
     padding: 10px 0;
-    margin-top: auto; /* Push to bottom if space allows */
+    margin-top: auto;
 }
 
-/* Modale */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(45, 52, 54, 0.4); backdrop-filter: blur(8px);
@@ -260,29 +204,7 @@ input:focus { background: white; border-color: #a18cd1; }
 .modal-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; }
 .modal-msg { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; }
 
-
-/* ========================================= */
-/* 7. ADMIN DASHBOARD STYLES           */
-/* ========================================= */
-/* Queste regole servono per la pagina admin.html */
-body:has(.admin-grid) { overflow-y: auto; display: block; } /* Riabilita scroll per admin */
-body:has(.admin-grid) main { max-width: 1200px; padding: 100px 20px; display: block; }
-
-.admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
-.stat-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(142, 197, 252, 0.2); text-align: center; }
-.stat-value { font-size: 2.5rem; font-weight: 700; background: var(--btn-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.stat-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-
-/* Tabelle Admin */
-.table-container { overflow-x: auto; background: white; border-radius: 20px; padding: 20px; box-shadow: var(--card-shadow); }
-table { width: 100%; border-collapse: collapse; min-width: 600px; }
-th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid #f1f2f6; }
-td { padding: 15px; color: var(--text-dark); border-bottom: 1px solid #f1f2f6; }
-.badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-.badge-green { background: #dff9fb; color: #6ab04c; }
-.badge-purple { background: #f3e5f5; color: #9c27b0; }
-.route-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; align-items: center; }
-.config-group { display: flex; gap: 10px; }
+/* CLASSE PER PULSANTI PASSEGGERI */
 .slim-btn-circle {
     width: 50px !important;
     height: 50px;
@@ -294,4 +216,94 @@ td { padding: 15px; color: var(--text-dark); border-bottom: 1px solid #f1f2f6; }
     font-size: 1.5rem;
     line-height: 1;
     margin: 0;
+}
+
+/* --- SCANNER VIEW OPTIMIZATIONS (Mobile Fit) --- */
+
+/* Forza il reader a non esplodere in altezza */
+#reader {
+    width: 100%;
+    max-width: 350px;
+    aspect-ratio: 1; /* Quadrato */
+    max-height: 40vh; /* Massimo 40% dell'altezza schermo */
+    border-radius: 20px;
+    overflow: hidden;
+    border: 3px solid white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    background: #000;
+}
+
+/* Stile compatto per i passeggeri */
+.passengers-compact {
+    background: white;
+    border-radius: 15px;
+    padding: 10px;
+    margin: 0 10px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+.passengers-compact p { 
+    margin: 0 0 5px 0; 
+    font-size: 0.8rem; 
+    color: var(--text-muted); 
+    font-weight: 600; 
+}
+.pax-count {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 15px;
+    color: var(--text-dark);
+}
+
+/* Stile compatto per input */
+.input-group-compact {
+    padding: 0 15px;
+    text-align: center;
+}
+.input-group-compact input {
+    padding: 12px;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+.input-group-compact .btn {
+    padding: 14px;
+    font-size: 1rem;
+}
+
+/* --- STILI PER SELETTORE PASSEGGERI MINIMAL --- */
+
+/* Il bottone bianco rotondo */
+.btn-white-round {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    color: #2d3436;
+    font-size: 2rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Ombra leggera */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+    padding-bottom: 6px; /* Per allineare meglio il testo verticalmente */
+}
+
+.btn-white-round:active {
+    transform: scale(0.9); /* Effetto click */
+}
+
+/* Il numero grande al centro */
+.pax-big-number {
+    font-size: 4rem; /* Molto grande */
+    font-weight: 800;
+    color: #2d3436; /* Grigio scuro quasi nero */
+    min-width: 50px;
+    text-align: center;
+    line-height: 1;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }

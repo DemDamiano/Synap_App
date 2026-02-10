@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Synap App</title>
+    
     <link rel="stylesheet" href="css/styles.css">
+    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
     <script src="js/app.js" defer></script>
 </head>
 <body>
@@ -36,9 +39,7 @@
                     <button onclick="showView('register')" class="link">Don't have an account? Sign up</button>
                 </div>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
 
         <section id="view-register" class="view">
@@ -55,12 +56,10 @@
                     <button onclick="showView('login')" class="link" style="margin-top: 15px;">Back to Login</button>
                 </div>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
 
-       <section id="view-home" class="view">
+        <section id="view-home" class="view">
     <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
         
         <div class="card" style="padding: 40px 20px;">
@@ -89,46 +88,48 @@
             SCAN QR (CHECK-IN)
         </button>
         
-        <p style="text-align: center; color: #b2bec3; font-size: 0.8rem; margin-top: 10px;">
+        <p id="text-or-scan" style="text-align: center; color: #b2bec3; font-size: 0.8rem; margin-top: 10px; display: none;">
             Oppure scansiona per uscire
         </p>
-        <button onclick="startScanner('END')" class="btn secondary" style="padding: 10px;">
+
+        <button id="btn-scan-end" onclick="startScanner('END')" class="btn secondary" style="padding: 10px; display: none;">
             CHECK-OUT RAPIDO
         </button>
+
     </div>
     <div class="iota-footer">Powered by IOTA</div>
 </section>
 
-       <section id="view-scan" class="view">
-    <div style="flex-grow: 1; display: flex; flex-direction: column;">
+      <section id="view-scan" class="view">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px;">
         
-        <h2 style="text-align: center; margin-top: 20px; color: #2d3436;">Scansiona QR Code</h2>
+        <h2 style="text-align: center; margin: 15px 0 10px 0; font-size: 1.1rem; color: #2d3436;">Scansiona QR Code</h2>
 
-        <div style="padding: 10px;">
+        <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; min-height: 0; margin-bottom: 10px;">
             <div id="reader"></div> 
         </div>
 
-        <div style="padding: 0 10px; margin-top: 10px;">
-            <input type="text" id="manual-code-input" placeholder="Codice Manuale (es. IN-BUS-01)">
-            <button onclick="handleManualEntry()" class="btn primary">CONFERMA</button>
-        </div>
+        <div style="flex-shrink: 0;">
+            
+            <div id="passenger-selection-box" style="margin: 20px 0; text-align: center;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 30px;">
+        <button onclick="changePassenger(-1)" class="btn-white-round">-</button>
+        
+        <span id="passenger-count-display" class="pax-big-number">1</span>
+        
+        <button onclick="changePassenger(1)" class="btn-white-round">+</button>
+    </div>
+</div>
 
-        <div id="passenger-selection-box" class="card" style="margin: 20px 10px; padding: 20px;">
-            <p style="margin: 0 0 15px 0; color: #636e72; font-weight: 600;">Numero Passeggeri</p>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
-                <button onclick="changePassenger(-1)" class="btn secondary slim-btn-circle">-</button>
-                <span id="passenger-count-display" class="gradient-text" style="font-size: 2.2rem; font-weight: 700;">1</span>
-                <button onclick="changePassenger(1)" class="btn secondary slim-btn-circle">+</button>
+            <div class="input-group-compact">
+                <input type="text" id="manual-code-input" placeholder="Codice Manuale (es. IN-BUS-01)">
+                <button onclick="handleManualEntry()" class="btn primary" style="margin-bottom: 5px;">CONFERMA</button>
+                <button onclick="showView('home')" class="link" style="font-size: 0.8rem;">Annulla</button>
             </div>
-        </div>
 
-        <div style="text-align: center;">
-             <button onclick="showView('home')" class="link">Annulla</button>
         </div>
     </div>
-    <div class="iota-footer">
-        Powered by IOTA
-    </div>
+    <div class="iota-footer" style="padding: 5px 0;">Powered by IOTA</div>
 </section>
 
         <section id="view-trip" class="view">
@@ -170,18 +171,14 @@
 
                 <button onclick="startScanner('END')" class="btn danger" style="padding: 20px; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(255, 154, 158, 0.4);">CHECK-OUT</button>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
 
         <section id="view-result" class="view">
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
                 <div class="ticket card"></div>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
     </main>
 
