@@ -99,37 +99,37 @@
     <div class="iota-footer">Powered by IOTA</div>
 </section>
 
-        <section id="view-scan" class="view">
-            <div style="flex-grow: 1; display: flex; flex-direction: column;">
-                
-                <h2 style="text-align: center; margin-top: 20px; color: #2d3436;">Scan the QR Code</h2>
+       <section id="view-scan" class="view">
+    <div style="flex-grow: 1; display: flex; flex-direction: column;">
+        
+        <h2 style="text-align: center; margin-top: 20px; color: #2d3436;">Scansiona QR Code</h2>
 
-                <div style="padding: 10px;">
-                    <div id="reader"></div> 
-                </div>
+        <div style="padding: 10px;">
+            <div id="reader"></div> 
+        </div>
 
-                <div style="padding: 0 10px; margin-top: 10px;">
-                    <input type="text" id="manual-code-input" placeholder="Manual Code (e.g. IN-BUS-01)">
-                    <button onclick="handleManualEntry()" class="btn primary">CONFIRM</button>
-                </div>
+        <div style="padding: 0 10px; margin-top: 10px;">
+            <input type="text" id="manual-code-input" placeholder="Codice Manuale (es. IN-BUS-01)">
+            <button onclick="handleManualEntry()" class="btn primary">CONFERMA</button>
+        </div>
 
-                <div id="passenger-selection-box" class="card" style="margin: 20px 10px; padding: 20px;">
-                    <p style="margin: 0 0 15px 0; color: #636e72; font-weight: 600;">Passengers</p>
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
-                        <button onclick="changePassenger(-1)" class="btn secondary slim-btn-circle">-</button>
-                        <span id="passenger-count-display" class="gradient-text" style="font-size: 2.2rem; font-weight: 700;">1</span>
-                        <button onclick="changePassenger(1)" class="btn secondary slim-btn-circle">+</button>
-                    </div>
-                </div>
-
-                <div style="text-align: center;">
-                     <button onclick="showView('home')" class="link">Cancel</button>
-                </div>
+        <div id="passenger-selection-box" class="card" style="margin: 20px 10px; padding: 20px;">
+            <p style="margin: 0 0 15px 0; color: #636e72; font-weight: 600;">Numero Passeggeri</p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+                <button onclick="changePassenger(-1)" class="btn secondary slim-btn-circle">-</button>
+                <span id="passenger-count-display" class="gradient-text" style="font-size: 2.2rem; font-weight: 700;">1</span>
+                <button onclick="changePassenger(1)" class="btn secondary slim-btn-circle">+</button>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
-        </section>
+        </div>
+
+        <div style="text-align: center;">
+             <button onclick="showView('home')" class="link">Annulla</button>
+        </div>
+    </div>
+    <div class="iota-footer">
+        Powered by IOTA
+    </div>
+</section>
 
         <section id="view-trip" class="view">
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">

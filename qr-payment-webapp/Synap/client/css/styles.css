@@ -283,3 +283,15 @@ td { padding: 15px; color: var(--text-dark); border-bottom: 1px solid #f1f2f6; }
 .badge-purple { background: #f3e5f5; color: #9c27b0; }
 .route-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; align-items: center; }
 .config-group { display: flex; gap: 10px; }
+.slim-btn-circle {
+    width: 50px !important;
+    height: 50px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    line-height: 1;
+    margin: 0;
+}

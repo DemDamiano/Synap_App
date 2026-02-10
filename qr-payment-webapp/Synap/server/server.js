@@ -15,15 +15,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(cors());
 app.use(express.json());
+// Serve il frontend dalla cartella client
 app.use(express.static(path.join(__dirname, '../client')));
 
 const PORT = 3000;
 
-// GLOBAL STATE
+// STATE
 const activeTrips = {}; 
 let tripHistory = Storage.loadHistory();
-
-// CONFIG
 let appConfig = Storage.loadConfig();
 let COSTO_AL_SECONDO = appConfig.costPerSecond;
 let CURRENT_ROUTE_ID = appConfig.currentRouteId || null;
@@ -38,9 +37,8 @@ function getCurrentRouteName() {
 // INIT
 async function init() {
     const iotaStatus = await IotaService.init();
-    console.clear();
     
-    // Banner
+    console.clear();
     const width = 60;
     const b = `${C.cyan}║${C.reset}`;
     const top = `${C.cyan}╔${"═".repeat(width)}╗${C.reset}`;
@@ -54,7 +52,7 @@ async function init() {
     };
 
     console.log(top);
-    console.log(`${b}   ✨ ${C.bright}SYNAP BUS SERVER${C.reset}${" ".repeat(width - 36)}v2.2.0 | ONLINE ${C.green}🟢${C.reset}   ${b}`);
+    console.log(`${b}   ✨ ${C.bright}SYNAP BUS SERVER${C.reset}${" ".repeat(width - 36)}v2.3.0 | ONLINE ${C.green}🟢${C.reset}   ${b}`);
     console.log(line);
     console.log(row("📍 ACTIVE ROUTE", getCurrentRouteName(), C.yellow));
     console.log(row("💰 CURRENT RATE", `${COSTO_AL_SECONDO} IOTA/s`, C.green));
@@ -72,21 +70,15 @@ async function init() {
 }
 init();
 
-// ==========================================
-//               ADMIN API (FIXED)
-// ==========================================
+// --- API ADMIN ---
 
-// 1. Dashboard Data (Ora include 'routes')
 app.get('/api/admin/dashboard', (req, res) => {
-    // Ricarichiamo le rotte fresche dal DB
     const routes = Storage.loadRoutes();
-    
     const activeList = Object.values(activeTrips).map(trip => {
         const duration = Math.floor((Date.now() - trip.startTime) / 1000);
         const tripRate = trip.rate || COSTO_AL_SECONDO;
         return {
-            ...trip,
-            duration,
+            ...trip, duration,
             currentCost: (duration * tripRate * trip.passengers).toFixed(2)
         };
     });
@@ -95,7 +87,7 @@ app.get('/api/admin/dashboard', (req, res) => {
         activeTrips: activeList,
         history: tripHistory.slice().reverse(),
         logs: getLogs(),
-        routes: routes, // <--- ECCOLO! Questo mancava e causava l'errore forEach
+        routes: routes,
         config: {
             costPerSecond: COSTO_AL_SECONDO,
             currentRouteId: CURRENT_ROUTE_ID,
@@ -104,7 +96,11 @@ app.get('/api/admin/dashboard', (req, res) => {
     });
 });
 
-// 2. Config Update
+// !!! QUESTA E' LA ROTTA CHE MANCAVA !!!
+app.get('/api/admin/config', (req, res) => {
+    res.json(Storage.loadConfig());
+});
+
 app.post('/api/admin/config', (req, res) => {
     const { costPerSecond, routeId } = req.body;
     if (costPerSecond > 0) {
@@ -124,25 +120,18 @@ app.post('/api/admin/config', (req, res) => {
     }
 });
 
-// 3. Add Route (Questo mancava e dava 404)
 app.post('/api/admin/routes', (req, res) => {
     const { name, cost } = req.body;
     if(!name || !cost) return res.status(400).json({error: "Dati mancanti"});
     
     const routes = Storage.loadRoutes();
-    const newRoute = { 
-        id: "route-" + Date.now(), 
-        name, 
-        costPerSecond: parseFloat(cost) 
-    };
-    
+    const newRoute = { id: "route-" + Date.now(), name, costPerSecond: parseFloat(cost) };
     routes.push(newRoute);
     Storage.saveRoutes(routes);
     log(`Nuova Rotta creata: ${name}`, "system");
     res.json({ ok: true, route: newRoute });
 });
 
-// 4. Delete Route
 app.delete('/api/admin/routes/:id', (req, res) => {
     const routes = Storage.loadRoutes();
     const newRoutes = routes.filter(r => r.id !== req.params.id);
@@ -154,9 +143,7 @@ app.delete('/api/admin/routes/:id', (req, res) => {
 app.get('/api/admin/logs', (req, res) => res.json({ logs: getLogs() }));
 
 
-// ==========================================
-//               USER API & AUTH
-// ==========================================
+// --- API USER ---
 
 app.post('/api/auth/register', (req, res) => {
     try {
@@ -224,15 +211,12 @@ app.post('/api/user/pay-debt', async (req, res) => {
     }
 });
 
-// --- TRIP FLOW ---
-
-app.post('/api/trip/start', async (req, res) => {
+app.post('/api/trip/start', (req, res) => {
     const { email, passengers } = req.body;
     const users = Storage.loadUsers();
     const user = users.find(u => u.email === email);
     if (!user) return res.status(404).json({ error: "User unknown" });
 
-    // 1. BLOCCO SE HA DEBITI
     if (user.debt && user.debt > 0.01) {
         log(`Check-in BLOCCATO per ${user.name}`, "error");
         return res.status(403).json({ 
@@ -243,10 +227,9 @@ app.post('/api/trip/start', async (req, res) => {
 
     const tripId = "TRIP-" + Date.now();
     activeTrips[tripId] = {
-        id: tripId, // Importante per il frontend admin
         startTime: Date.now(),
         passengers: passengers || 1,
-        email, userName: user.name, // userName per admin
+        email, userName: user.name,
         rate: COSTO_AL_SECONDO,
         routeName: getCurrentRouteName()
     };
@@ -304,12 +287,12 @@ app.post('/api/trip/end', async (req, res) => {
 
     tripHistory.push({
         user: user.name,
-        route: trip.routeName, // Per la history admin
+        route: trip.routeName,
         cost: totalCost.toFixed(2),
         paid: paidAmount.toFixed(2),
         status: status,
         tx: txHash || "N/A",
-        startTime: new Date(trip.startTime).toLocaleTimeString(), // Per la history admin
+        startTime: new Date(trip.startTime).toLocaleTimeString(),
         endTime: new Date().toLocaleTimeString(),
         date: new Date().toISOString()
     });
