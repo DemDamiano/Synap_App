@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Synap Admin</title>
-    <link rel="stylesheet" href="styles.css">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         /* ADMIN SPECIFIC OVERRIDES */
-        body { overflow-y: auto; } /* Allow scroll on desktop */
-        main { max-width: 1200px; padding-top: 100px; } /* Wider layout */
+        body { overflow-y: auto; }
+        main { max-width: 1200px; padding-top: 100px; }
         
         .admin-grid {
             display: grid;
@@ -43,21 +45,11 @@
         td { padding: 15px; color: var(--text-dark); border-bottom: 1px solid #f1f2f6; }
         tr:last-child td { border-bottom: none; }
         
-        .badge {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
+        .badge { padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; }
         .badge-green { background: #dff9fb; color: #6ab04c; }
         .badge-purple { background: #f3e5f5; color: #9c27b0; }
 
-        /* FORMS IN GRID */
-        .config-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+        .config-group { display: flex; gap: 10px; align-items: center; }
         .config-group input { margin-bottom: 0; }
         .config-group button { width: auto; margin-bottom: 0; padding: 16px 25px; }
 
@@ -68,7 +60,6 @@
             padding: 15px;
             border-bottom: 1px solid #f1f2f6;
         }
-        .route-item:last-child { border-bottom: none; }
         .btn-small { padding: 5px 10px; font-size: 0.8rem; width: auto; margin: 0; }
     </style>
 </head>
@@ -136,7 +127,7 @@
             </table>
         </div>
 
-        <h2 style="margin-left: 10px;">📜 Recent History</h2>
+        <h2 style="margin-left: 10px;">📜 Recent History (L1 Tokens)</h2>
         <div class="table-container">
             <table id="history-table">
                 <thead>
@@ -146,7 +137,7 @@
                         <th>Time</th>
                         <th>Cost</th>
                         <th>Status</th>
-                        <th>TX</th>
+                        <th>Token ID (Proof)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -161,6 +152,7 @@
     </main>
 
     <script>
+        // Nota: Assicurati che la porta sia corretta
         const API_URL = 'http://localhost:3000/api';
 
         async function fetchDashboard() {
@@ -175,7 +167,7 @@
             // Stats
             document.getElementById('stat-pax').innerText = data.activeTrips.length;
             document.getElementById('stat-rate').innerText = data.config.costPerSecond;
-            document.getElementById('stat-route').innerText = data.config.currentRouteName;
+            document.getElementById('stat-route').innerText = data.config.currentRouteName || "Manual";
             
             // Live Table
             const liveBody = document.querySelector('#live-table tbody');
@@ -201,10 +193,15 @@
             const histBody = document.querySelector('#history-table tbody');
             histBody.innerHTML = '';
             data.history.forEach(h => {
-                let statusBadge = h.status === 'FULL' 
-                    ? `<span class="badge badge-green">PAID</span>` 
+                let statusBadge = h.status === 'PAID' 
+                    ? `<span class="badge badge-green">L1 TOKEN MINTED</span>` 
                     : `<span class="badge" style="background:#ffecec; color:#d63031">DEBT</span>`;
                 
+                // Formatta il Token ID se presente
+                let txDisplay = h.tx && h.tx.startsWith('0x') 
+                    ? `<span style="font-family:monospace; color:#a18cd1;">${h.tx.substring(0, 10)}...</span>` 
+                    : h.tx || 'N/A';
+
                 const row = `
                     <tr>
                         <td>${h.user}</td>
@@ -212,7 +209,7 @@
                         <td>${h.startTime} - ${h.endTime}</td>
                         <td>${h.cost} IOTA</td>
                         <td>${statusBadge}</td>
-                        <td><a href="#" style="color:#a18cd1; text-decoration:none;">${h.tx}</a></td>
+                        <td>${txDisplay}</td>
                     </tr>
                 `;
                 histBody.innerHTML += row;

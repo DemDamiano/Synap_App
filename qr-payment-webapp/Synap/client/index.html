@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Synap App</title>
-    <link rel="stylesheet" href="styles.css">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <script src="app.js" defer></script>
+    
+    <script type="module" src="js/app.js"></script>
 </head>
 <body>
 
@@ -16,7 +19,7 @@
         </div>
         <div class="user-profile">
             <span class="user-name">...</span>
-            <button onclick="handleLogout()" class="btn-logout">Exit</button>
+            <button id="btn-logout" class="btn-logout">Exit</button>
         </div>
     </header>
 
@@ -33,12 +36,10 @@
                     </form>
                 </div>
                 <div style="text-align: center;">
-                    <button onclick="showView('register')" class="link">Don't have an account? Sign up</button>
+                    <button id="link-to-register" class="link">Don't have an account? Sign up</button>
                 </div>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
 
         <section id="view-register" class="view">
@@ -52,12 +53,10 @@
                         <input type="password" id="reg-password" placeholder="Password" required>
                         <button type="submit" class="btn primary">Sign Up</button>
                     </form>
-                    <button onclick="showView('login')" class="link" style="margin-top: 15px;">Back to Login</button>
+                    <button id="link-to-login" class="link" style="margin-top: 15px;">Back to Login</button>
                 </div>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
 
         <section id="view-home" class="view">
@@ -76,18 +75,16 @@
                         <div style="font-size: 0.85rem; margin-bottom: 10px; color: #636e72;">
                             Insufficient balance to travel.
                         </div>
-                        <button onclick="handlePayDebt()" class="btn danger" style="font-size: 0.85rem; padding: 10px; margin-bottom: 0;">
+                        <button id="btn-pay-debt" class="btn danger" style="font-size: 0.85rem; padding: 10px; margin-bottom: 0;">
                             Pay Debt
                         </button>
                     </div>
                 </div>
                 
-                <button onclick="startScanner('START')" class="btn primary">SCAN QR (CHECK-IN)</button>
+                <button id="btn-scan-start" class="btn primary">SCAN QR (CHECK-IN)</button>
                 <p style="text-align: center; color: #b2bec3; font-size: 0.8rem; margin-top: 10px;">Or scan to check-out</p>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
 
         <section id="view-scan" class="view">
@@ -101,25 +98,23 @@
 
                 <div style="padding: 0 10px; margin-top: 10px;">
                     <input type="text" id="manual-code-input" placeholder="Manual Code (e.g. IN-BUS-01)">
-                    <button onclick="handleManualEntry()" class="btn primary">CONFIRM</button>
+                    <button id="btn-manual-confirm" class="btn primary">CONFIRM</button>
                 </div>
 
                 <div id="passenger-selection-box" class="card" style="margin: 20px 10px; padding: 20px;">
                     <p style="margin: 0 0 15px 0; color: #636e72; font-weight: 600;">Passengers</p>
                     <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
-                        <button onclick="changePassenger(-1)" class="btn secondary slim-btn-circle">-</button>
+                        <button id="btn-pax-minus" class="btn secondary slim-btn-circle">-</button>
                         <span id="passenger-count-display" class="gradient-text" style="font-size: 2.2rem; font-weight: 700;">1</span>
-                        <button onclick="changePassenger(1)" class="btn secondary slim-btn-circle">+</button>
+                        <button id="btn-pax-plus" class="btn secondary slim-btn-circle">+</button>
                     </div>
                 </div>
 
                 <div style="text-align: center;">
-                     <button onclick="showView('home')" class="link">Cancel</button>
+                     <button id="btn-scan-cancel" class="link">Cancel</button>
                 </div>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
 
         <section id="view-trip" class="view">
@@ -159,20 +154,16 @@
                     <div id="trip-timer" class="timer" style="display: none;">00:00</div>
                 </div>
 
-                <button onclick="startScanner('END')" class="btn danger" style="padding: 20px; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(255, 154, 158, 0.4);">CHECK-OUT</button>
+                <button id="btn-checkout" class="btn danger" style="padding: 20px; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(255, 154, 158, 0.4);">CHECK-OUT</button>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
 
         <section id="view-result" class="view">
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
                 <div class="ticket card"></div>
             </div>
-            <div class="iota-footer">
-                Powered by IOTA
-            </div>
+            <div class="iota-footer">Powered by IOTA</div>
         </section>
     </main>
 
@@ -181,7 +172,7 @@
             <div id="modal-icon" class="modal-icon"></div>
             <div id="modal-title" class="modal-title"></div>
             <div id="modal-msg" class="modal-msg"></div>
-            <button onclick="closeModal()" class="btn primary">OK</button>
+            <button onclick="document.getElementById('custom-modal').classList.remove('open')" class="btn primary">OK</button>
         </div>
     </div>
 
