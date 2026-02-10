@@ -118,5 +118,16 @@
     "cost": "0.84",
     "status": "PARTIAL/DEBT",
     "tx": "DCnCZ7sM..."
+  },
+  {
+    "user": "Damiano",
+    "route": "Cuneo - Torino",
+    "startTime": "9:08:05 AM",
+    "endTime": "9:08:17 AM",
+    "duration": 11,
+    "passengers": 1,
+    "cost": "0.11",
+    "status": "FULL",
+    "tx": "AaZTHG7f..."
   }
 ]

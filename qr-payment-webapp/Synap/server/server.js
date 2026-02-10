@@ -102,8 +102,8 @@ function generateMockMnemonic() {
 
 async function init() {
     log("-----------------------------------------");
-    log("🏦 BANK SERVER STARTED (ENGLISH EDITION)");
-    log(`⚙️  Active Route: ${getCurrentRouteName()} (${COSTO_AL_SECONDO} IOTA/s)`);
+    log("🚌 BUS SERVER");
+    log(`✅  Active Route: ${getCurrentRouteName()} (${COSTO_AL_SECONDO} IOTA/s)`);
     log("-----------------------------------------");
     client = new IotaClient({ url: NODE_URL });
     busKeypair = Ed25519Keypair.deriveKeypair(MNEMONIC_BUS);
@@ -268,4 +268,141 @@ app.post('/api/trip/end', async (req, res) => {
         const tripData = activeTrips[tripId];
         let durationSeconds = 0;
         let passengerCount = 1;
-        let tripRate = COSTO_AL_SE
+        let tripRate = COSTO_AL_SECONDO;
+        let routeName = "Unknown";
+        let startTime = Date.now();
+
+        if (tripData) {
+            startTime = tripData.startTime;
+            durationSeconds = Math.floor((Date.now() - startTime) / 1000);
+            passengerCount = tripData.passengers || 1;
+            tripRate = tripData.rate || COSTO_AL_SECONDO;
+            routeName = tripData.routeName || getCurrentRouteName();
+        }
+
+        let tripCost = (durationSeconds * tripRate) * passengerCount;
+        tripCost = Math.round(tripCost * 100) / 100;
+        if (tripCost < 0.01) tripCost = 0.01;
+
+        const users = loadUsers();
+        const userIndex = users.findIndex(u => u.email === email);
+        if (userIndex === -1) throw new Error("User not found");
+        const user = users[userIndex];
+        const previousDebt = user.debt || 0;
+        const totalAmountDue = tripCost + previousDebt;
+
+        const userKeypair = Ed25519Keypair.deriveKeypair(user.mnemonic);
+        const balances = await client.getAllBalances({ owner: userKeypair.getPublicKey().toIotaAddress() });
+        const walletBalanceNano = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
+        const totalDueNano = Math.floor(totalAmountDue * 1_000_000_000);
+        
+        let amountToPayNano = 0;
+        let newDebtAmount = 0;
+        let paymentStatus = "FULL";
+
+        if (walletBalanceNano >= totalDueNano) {
+            amountToPayNano = totalDueNano;
+        } else {
+            amountToPayNano = walletBalanceNano;
+            const paidIota = amountToPayNano / 1_000_000_000;
+            newDebtAmount = totalAmountDue - paidIota;
+            newDebtAmount = Math.round(newDebtAmount * 100) / 100;
+            paymentStatus = "PARTIAL/DEBT";
+        }
+
+        let txDigest = null;
+        if (amountToPayNano > 0) {
+            const tx = new Transaction();
+            const [coin] = tx.splitCoins(tx.gas, [amountToPayNano]); 
+            tx.transferObjects([coin], busKeypair.getPublicKey().toIotaAddress());
+            const result = await client.signAndExecuteTransaction({ signer: userKeypair, transaction: tx });
+            txDigest = result.digest;
+        }
+
+        users[userIndex].debt = newDebtAmount;
+        saveUsers(users);
+
+        log(`⬅️ EXIT: ${user.name}. Route: ${routeName}. Total: ${tripCost}`);
+
+        if (tripData) {
+            const newHistoryEntry = {
+                user: user.name,
+                route: routeName, 
+                startTime: new Date(startTime).toLocaleTimeString(),
+                endTime: new Date().toLocaleTimeString(),
+                duration: durationSeconds,
+                passengers: passengerCount,
+                cost: tripCost.toFixed(2),
+                status: paymentStatus,
+                tx: txDigest ? txDigest.substring(0, 8) + '...' : 'N/A'
+            };
+            tripHistory.push(newHistoryEntry);
+            if (tripHistory.length > 500) tripHistory.shift();
+            saveTripHistory(tripHistory);
+            delete activeTrips[tripId];
+        }
+
+        res.json({ 
+            ok: true, 
+            cost: tripCost.toFixed(2), 
+            paid: (amountToPayNano / 1_000_000_000).toFixed(2),
+            debt: newDebtAmount.toFixed(2),
+            explorerUrl: txDigest ? `${EXPLORER_URL}${txDigest}?network=testnet` : null
+        });
+
+    } catch (e) {
+        log(`❌ ERROR: ${e.message}`);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/user/balance', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const users = loadUsers();
+        const user = users.find(u => u.email === email);
+        if (!user) return res.status(404).json({ error: "No user" });
+        const userKeypair = Ed25519Keypair.deriveKeypair(user.mnemonic);
+        const balances = await client.getAllBalances({ owner: userKeypair.getPublicKey().toIotaAddress() });
+        const totalBalance = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
+        res.json({ balance: (totalBalance / 1e9).toFixed(2), debt: (user.debt || 0).toFixed(2) });
+    } catch (e) { res.status(500).json({ error: "Balance error" }); }
+});
+
+app.post('/api/user/pay-debt', async (req, res) => {
+   try {
+        const { email } = req.body;
+        const users = loadUsers();
+        const userIndex = users.findIndex(u => u.email === email);
+        if (userIndex === -1) return res.status(404).json({ error: "User not found" });
+        const user = users[userIndex];
+        if (!user.debt || user.debt <= 0) return res.status(400).json({ error: "No debt!" });
+        const userKeypair = Ed25519Keypair.deriveKeypair(user.mnemonic);
+        const balances = await client.getAllBalances({ owner: userKeypair.getPublicKey().toIotaAddress() });
+        const walletBalanceNano = balances.reduce((acc, b) => acc + parseInt(b.totalBalance), 0);
+        const walletBalance = walletBalanceNano / 1e9;
+        if (walletBalance <= 0) return res.status(400).json({ error: "Empty Wallet!" });
+        let amountToPay = Math.min(walletBalance, user.debt);
+        amountToPay = Math.floor(amountToPay * 100) / 100; 
+        if (amountToPay < 0.01) return res.status(400).json({ error: "Balance too low." });
+        log(`💸 Manual Debt Payment: ${user.name} paying ${amountToPay}`);
+        const amountNano = Math.floor(amountToPay * 1e9);
+        const tx = new Transaction();
+        const [coin] = tx.splitCoins(tx.gas, [amountNano]);
+        tx.transferObjects([coin], busKeypair.getPublicKey().toIotaAddress());
+        await client.signAndExecuteTransaction({ signer: userKeypair, transaction: tx });
+        user.debt -= amountToPay;
+        if (user.debt < 0.01) user.debt = 0;
+        user.debt = Math.round(user.debt * 100) / 100;
+        saveUsers(users);
+        res.json({ ok: true, paid: amountToPay.toFixed(2), remainingDebt: user.debt.toFixed(2), message: `Paid ${amountToPay} IOTA.` });
+    } catch (e) {
+        log(`❌ Debt Pay Error: ${e.message}`);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.listen(PORT, () => {
+    log(`🌍 SERVER READY: http://localhost:${PORT}`);
+    log(`⚙️  ADMIN DASHBOARD: http://localhost:${PORT}/admin.html`);
+});
