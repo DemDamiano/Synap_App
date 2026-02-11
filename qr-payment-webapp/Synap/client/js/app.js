@@ -224,12 +224,12 @@ function startScanner(mode) {
     // LOGICA VISIVA INTELLIGENTE
     if (scanMode === 'END') {
         // MODALITÀ USCITA (CHECK-OUT)
-        if(manualInput) manualInput.placeholder = "Es. OUT-BUS-01";
+        if(manualInput) manualInput.placeholder = "Manual checkout";
         // Nascondiamo la selezione passeggeri (escono tutti di default)
         if(passengerBox) passengerBox.style.display = 'none';
     } else {
         // MODALITÀ ENTRATA (CHECK-IN)
-        if(manualInput) manualInput.placeholder = "Es. IN-BUS-01";
+        if(manualInput) manualInput.placeholder = "Manual checkin";
         // Mostriamo la selezione passeggeri
         if(passengerBox) passengerBox.style.display = 'block';
     }

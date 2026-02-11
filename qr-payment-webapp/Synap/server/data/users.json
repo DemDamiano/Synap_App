@@ -6,5 +6,13 @@
     "mnemonic": "fig apple whiskey victor lima papa sierra alpha charlie charlie cherry bravo",
     "address": "0x31540051c350e8d7964d57982253362419ada46a8b355235890f5d16c5030bef",
     "debt": 0
+  },
+  {
+    "email": "damiano.rovella@hotmail.com",
+    "password": "123",
+    "name": "damiano",
+    "mnemonic": "india papa oscar india fig delta echo november sierra tango cherry elderberry",
+    "address": "0x4271bb60100d6a560c69eb15ca935debae1a1ed6443db4fa881f32e2703964d1",
+    "debt": 0
   }
 ]

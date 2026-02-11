@@ -111,18 +111,23 @@
 
         <div style="flex-shrink: 0;">
             
-            <div id="passenger-selection-box" style="margin: 20px 0; text-align: center;">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 30px;">
+           <div id="passenger-selection-box">
+    <div style="display: flex; align-items: center; justify-content: center;">
+        
         <button onclick="changePassenger(-1)" class="btn-white-round">-</button>
         
-        <span id="passenger-count-display" class="pax-big-number">1</span>
+        <div class="pax-container">
+            <span class="pax-label">PASSENGERS</span>
+            <span id="passenger-count-display" class="pax-big-number">1</span>
+        </div>
         
         <button onclick="changePassenger(1)" class="btn-white-round">+</button>
+        
     </div>
 </div>
 
             <div class="input-group-compact">
-                <input type="text" id="manual-code-input" placeholder="Codice Manuale (es. IN-BUS-01)">
+                <input type="text" id="manual-code-input" placeholder="Manual code">
                 <button onclick="handleManualEntry()" class="btn primary" style="margin-bottom: 5px;">CONFERMA</button>
                 <button onclick="showView('home')" class="link" style="font-size: 0.8rem;">Annulla</button>
             </div>

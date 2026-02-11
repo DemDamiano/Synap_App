@@ -206,5 +206,16 @@
     "startTime": "8:45:43 PM",
     "endTime": "8:46:40 PM",
     "date": "2026-02-10T19:46:40.718Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.02",
+    "paid": "0.02",
+    "status": "FULL",
+    "tx": "4fbHQJPz2cDtWwAtxGoWBBg2MKbHrveRzQpzydRygEsb",
+    "startTime": "3:43:21 PM",
+    "endTime": "3:43:43 PM",
+    "date": "2026-02-11T14:43:43.578Z"
   }
 ]
