@@ -1,5 +1,5 @@
 // ==========================================
-//           CONFIGURATION
+//          CONFIGURATION
 // ==========================================
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -22,7 +22,6 @@ const views = {
     result: document.getElementById('view-result')
 };
 
-// --- HELPER FUNZIONI (ESSENZIALE!) ---
 async function apiCall(endpoint, method = 'GET', body = null) {
     const headers = { 'Content-Type': 'application/json' };
     const config = { method, headers };
@@ -32,26 +31,22 @@ async function apiCall(endpoint, method = 'GET', body = null) {
         const data = await res.json();
         return { ok: res.ok, status: res.status, data };
     } catch (e) {
-        return { ok: false, data: { error: "Errore di connessione al server" } };
+        return { ok: false, data: { error: "Server connection error" } };
     }
 }
 
-// --- POPUP MANAGEMENT ---
 function showPopup(title, msg, type = 'info') {
     const modal = document.getElementById('custom-modal');
     const mTitle = document.getElementById('modal-title');
     const mMsg = document.getElementById('modal-msg');
     const mIcon = document.getElementById('modal-icon');
-
     if(mTitle) mTitle.innerText = title;
     if(mMsg) mMsg.innerHTML = msg; 
-    
     if(mIcon) {
         if (type === 'error') mIcon.innerText = '❌';
         else if (type === 'success') mIcon.innerText = '✅';
         else mIcon.innerText = 'ℹ️';
     }
-
     if(modal) modal.classList.add('open');
 }
 
@@ -60,22 +55,18 @@ function closeModal() {
     if(modal) modal.classList.remove('open');
 }
 
-// NAVIGATION
 function showView(viewName) {
     Object.values(views).forEach(el => { if(el) el.classList.remove('active'); });
     if (views[viewName]) views[viewName].classList.add('active');
 }
 
-// SYNC PRICE
 async function syncPrice() {
-    // Usa dashboard per prendere la config perché contiene tutto
     const res = await apiCall('/admin/config'); 
     if (res.ok && res.data.costPerSecond) {
         pricePerSecond = res.data.costPerSecond;
     }
 }
 
-// PASSENGERS
 function changePassenger(delta) {
     selectedPassengers += delta;
     if (selectedPassengers < 1) selectedPassengers = 1;
@@ -84,18 +75,14 @@ function changePassenger(delta) {
     if (display) display.innerText = selectedPassengers;
 }
 
-// AUTH
 async function handleLogin(event) {
     event.preventDefault();
     const btn = document.querySelector('#login-form button');
     const oldText = btn.innerText;
     btn.innerText = "..."; btn.disabled = true;
-    
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-
     const res = await apiCall('/auth/login', 'POST', { email, password });
-        
     if (res.ok) {
         localStorage.setItem('synap_token', res.data.token);
         localStorage.setItem('synap_user', res.data.user);
@@ -105,9 +92,7 @@ async function handleLogin(event) {
         showView('home');
         refreshBalance();
         syncPrice();
-    } else {
-        showPopup("Errore Login", res.data.error, 'error');
-    }
+    } else { showPopup("Login Error", res.data.error, 'error'); }
     btn.innerText = oldText; btn.disabled = false; 
 }
 
@@ -115,140 +100,97 @@ async function handleRegister(event) {
     event.preventDefault();
     const btn = document.querySelector('#register-form button');
     btn.innerText = "..."; btn.disabled = true;
-    
     const name = document.getElementById('reg-name').value;
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
-    
     const res = await apiCall('/auth/register', 'POST', { name, email, password });
-
     if (res.ok) {
-        showPopup("Registrato!", "Account creato. Ora fai il login.", 'success');
+        showPopup("Registered!", "Account created.", 'success');
         showView('login'); 
         document.getElementById('register-form').reset();
-    } else {
-        showPopup("Errore Registrazione", res.data.error, 'error');
-    }
+    } else { showPopup("Error", res.data.error, 'error'); }
     btn.innerText = "Sign Up"; btn.disabled = false; 
 }
 
 function handleLogout() { stopTripTimer(); localStorage.clear(); location.reload(); }
-
 function updateUIProfile() { 
     const el = document.querySelector('.user-name'); 
     if(el) el.innerText = localStorage.getItem('synap_user') || 'Guest'; 
 }
 
-// Gestisce quale bottone mostrare nella Home
 function updateHomeButtons() {
     const isTraveling = localStorage.getItem('synap_is_traveling') === 'true';
     const btnStart = document.getElementById('btn-scan-start');
     const btnEnd = document.getElementById('btn-scan-end');
     const textOr = document.getElementById('text-or-scan');
-
     if (isTraveling) {
-        // SEI IN VIAGGIO: Nascondi Start, Mostra End
         if(btnStart) btnStart.style.display = 'none';
-        if(textOr) textOr.style.display = 'none'; // Nascondo anche il testo inutile
+        if(textOr) textOr.style.display = 'none'; 
         if(btnEnd) btnEnd.style.display = 'block';
     } else {
-        // SEI FERMO: Mostra Start, Nascondi End
         if(btnStart) btnStart.style.display = 'block';
-        if(textOr) textOr.style.display = 'none'; // Nascondo testo per pulizia
+        if(textOr) textOr.style.display = 'none'; 
         if(btnEnd) btnEnd.style.display = 'none';
     }
 }
 
-// --- BALANCE & DEBT ---
 async function refreshBalance() {
     const email = localStorage.getItem('synap_email');
     if (!email) return;
-
     const res = await apiCall('/user/balance', 'POST', { email });
-    
     if (res.ok) {
         const balEl = document.getElementById('balance-amount');
         if(balEl) balEl.innerText = res.data.balance;
+        const lockedVal = parseFloat(res.data.locked || 0);
+        const lockedEl = document.getElementById('locked-balance-info');
+        if (lockedEl) {
+            lockedEl.style.display = lockedVal > 0 ? 'block' : 'none';
+            lockedEl.innerText = `🔒 ${lockedVal.toFixed(2)} Reserved`;
+        }
         
         const debtBox = document.getElementById('debt-warning');
         const scanBtn = document.getElementById('btn-scan-start');
         const debtAmountVal = parseFloat(res.data.debt);
-
         if (debtAmountVal > 0.00) {
-            // MOSTRA DEBITO
-            if(debtBox) {
-                debtBox.style.display = 'block';
-                const dAmount = document.getElementById('debt-amount');
-                if(dAmount) dAmount.innerText = res.data.debt;
-            }
-            // DISABILITA SCAN
-            if(scanBtn) {
-                scanBtn.disabled = true;
-                scanBtn.style.opacity = "0.5";
-                scanBtn.innerText = "BLOCCATO (DEBITO)";
-            }
+            if(debtBox) { debtBox.style.display = 'block'; document.getElementById('debt-amount').innerText = res.data.debt; }
+            if(scanBtn) { scanBtn.disabled = true; scanBtn.style.opacity = "0.5"; scanBtn.innerText = "LOCKED (DEBT)"; }
         } else {
-            // NASCONDI DEBITO
             if(debtBox) debtBox.style.display = 'none';
-            // ABILITA SCAN
-            if(scanBtn) {
-                scanBtn.disabled = false;
-                scanBtn.style.opacity = "1";
-                scanBtn.innerText = "SCAN QR (CHECK-IN)";
-            }
+            if(scanBtn) { scanBtn.disabled = false; scanBtn.style.opacity = "1"; scanBtn.innerText = "SCAN QR (CHECK-IN)"; }
         }
     }
 }
 
 async function handlePayDebt() {
     const debtAmount = document.getElementById('debt-amount') ? document.getElementById('debt-amount').innerText : "0";
-    if(!confirm(`Confermi di voler pagare ${debtAmount} IOTA per saldare il debito?`)) return;
-
+    if(!confirm(`Confirm payment?`)) return;
     const email = localStorage.getItem('synap_email');
     const res = await apiCall('/user/pay-debt', 'POST', { email });
-
-    if (res.ok) {
-        showPopup("Debito Saldato!", `Hai pagato ${res.data.paid} IOTA.`, 'success');
-        refreshBalance();
-    } else {
-        showPopup("Errore", res.data.error, 'error');
-    }
+    if (res.ok) { showPopup("Paid!", `Settled ${res.data.paid} IOTA.`, 'success'); refreshBalance(); }
+    else { showPopup("Error", res.data.error, 'error'); }
 }
 
-// SCANNER
 function startScanner(mode) {
     scanMode = mode || 'START';
     const manualInput = document.getElementById('manual-code-input');
     const passengerBox = document.getElementById('passenger-selection-box');
-    
-    // LOGICA VISIVA INTELLIGENTE
     if (scanMode === 'END') {
-        // MODALITÀ USCITA (CHECK-OUT)
         if(manualInput) manualInput.placeholder = "Manual checkout";
-        // Nascondiamo la selezione passeggeri (escono tutti di default)
         if(passengerBox) passengerBox.style.display = 'none';
     } else {
-        // MODALITÀ ENTRATA (CHECK-IN)
         if(manualInput) manualInput.placeholder = "Manual checkin";
-        // Mostriamo la selezione passeggeri
         if(passengerBox) passengerBox.style.display = 'block';
     }
-
     showView('scan');
-    
-    // Resettiamo visualizzazione a quanto selezionato
     const passDisplay = document.getElementById('passenger-count-display');
     if(passDisplay) passDisplay.innerText = selectedPassengers;
-
     if (html5QrCode) return;
     
     setTimeout(() => {
         if(document.getElementById("reader")) {
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, ()=>{})
-            .catch(err => {
-                console.log("Camera error (possibile su desktop):", err);
-            });
+            .catch(err => { console.log("Camera error:", err); });
         }
     }, 300);
 }
@@ -262,15 +204,12 @@ function onScanSuccess(t) {
 
 function handleManualEntry() { const v = document.getElementById('manual-code-input').value; if(v) onScanSuccess(v); }
 
-// TRIP & TIMER
 function startTripTimer() {
     tripStartTime = Date.now();
     const timerEl = document.getElementById('trip-timer');
     const costEl = document.getElementById('trip-cost');
     if(!timerEl || !costEl) return;
-    
     document.getElementById('trip-timer').style.display = 'block';
-    
     tripInterval = setInterval(() => {
         const diff = Math.floor((Date.now() - tripStartTime) / 1000);
         const min = Math.floor(diff / 60).toString().padStart(2, '0');
@@ -286,69 +225,137 @@ async function startTrip(qrData) {
     const email = localStorage.getItem('synap_email');
     await syncPrice();
     
+    // IMPORTANTE: Invio esplicito dei passeggeri selezionati
     const res = await apiCall('/trip/start', 'POST', { qrData, email, passengers: selectedPassengers });
 
     if (res.ok) {
         currentTripId = res.data.tripId; 
-        
-        // --- SALVO STATO VIAGGIO ---
         localStorage.setItem('synap_trip_id', currentTripId);
         localStorage.setItem('synap_is_traveling', 'true');
-        updateHomeButtons(); // Aggiorna UI
-        // ---------------------------
+        updateHomeButtons(); 
 
         showView('trip'); 
-        
-        // ... (resto del codice uguale per display dati) ...
         document.getElementById('trip-id-display').innerText = qrData;
         document.getElementById('trip-route-display').innerText = res.data.routeName || "Standard"; 
         document.getElementById('trip-passengers-display').innerText = selectedPassengers;
         document.getElementById('trip-rate-display').innerText = pricePerSecond;
 
         startTripTimer();
+        refreshBalance(); 
     } else {
         showPopup("Stop!", res.data.message || res.data.error, 'error');
         showView('home');
     }
 }
 
+// --- NEW INVOICE & PDF LOGIC ---
 async function endTrip(qrData) {
     stopTripTimer();
     showView('result');
     const box = document.querySelector('.ticket');
-    box.innerHTML = `<div class="loader" style="text-align:center; padding:20px;">🔄 Calcolo e Pagamento Blockchain...</div>`;
+    box.innerHTML = `<div class="loader" style="text-align:center; padding:20px;">🔄 Blockchain Settlement...</div>`;
 
-    // Recupera ID dal server o dal local storage se manca
     const tripId = currentTripId || localStorage.getItem('synap_trip_id');
     const email = localStorage.getItem('synap_email');
     
     const res = await apiCall('/trip/end', 'POST', { tripId: tripId, qrData, email });
 
     if (res.ok) {
-        // --- RESETTO STATO VIAGGIO ---
         localStorage.removeItem('synap_trip_id');
         localStorage.setItem('synap_is_traveling', 'false');
         currentTripId = null;
-        // -----------------------------
 
-        // ... (Codice visualizzazione ticket uguale a prima) ...
         const d = res.data;
-        // ... (Generazione HTML ticket) ...
-        // Assicurati che l'HTML del ticket sia lo stesso di prima
+        let title = parseFloat(d.debt) > 0 ? "PARTIAL PAYMENT" : "PAYMENT SUCCESSFUL";
+        let color = parseFloat(d.debt) > 0 ? "#e17055" : "#a18cd1";
         
-        // Esempio breve del ticket (usa il tuo completo):
-        let title = parseFloat(d.debt) > 0 ? "PARZIALE" : "PAGATO";
+        // FIX: Conversione sicura durata e passeggeri per evitare NaN/undefined
+        const durationSec = Number(d.durationSeconds) || 0;
+        const m = Math.floor(durationSec / 60).toString().padStart(2,'0');
+        const s = Math.floor(durationSec % 60).toString().padStart(2,'0');
+        const pax = d.passengers || 1;
+        const rate = d.rate || 0.01;
+
+        const fullTxId = d.explorerUrl ? d.explorerUrl.split('/').pop().split('?')[0] : 'N/A';
+        const shortTxId = fullTxId !== 'N/A' ? fullTxId.substring(0,15)+'...' : 'N/A';
+
+        // HTML INVOICE
         box.innerHTML = `
-            <h2 style="color:#a18cd1; text-align:center">${title}</h2>
-            <div style="text-align:center; font-size:2rem; font-weight:bold;">-${d.paid} IOTA</div>
-            <div style="text-align:center; margin-top:10px">Costo: ${d.cost}</div>
-            <button onclick="resetAppAndHome()" class="btn primary" style="margin-top:20px">TORNA ALLA HOME</button>
+            <div id="invoice-content" style="background:white; padding:10px; border-radius:10px;">
+                <div style="text-align:center; padding-bottom:10px; border-bottom:1px dashed #dfe6e9; margin-bottom:15px;">
+                    <h2 style="color:${color}; margin:0; font-size:1.4rem;">${title}</h2>
+                    <div style="color:#b2bec3; font-size:0.8rem; margin-top:5px;">${new Date().toLocaleString()}</div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; text-align:left; font-size:0.9rem; margin-bottom:15px;">
+                    <div style="color:#636e72;">Route</div>
+                    <div style="text-align:right; font-weight:600;">${d.routeName || 'Standard'}</div>
+                    
+                    <div style="color:#636e72;">Duration</div>
+                    <div style="text-align:right; font-weight:600;">${m}:${s}</div>
+
+                    <div style="color:#636e72;">Passengers</div>
+                    <div style="text-align:right; font-weight:600;">${pax}</div>
+
+                    <div style="color:#636e72;">Rate</div>
+                    <div style="text-align:right; font-weight:600;">${rate} IOTA/s</div>
+                </div>
+
+                <div style="background:#f1f2f6; border-radius:10px; padding:15px; text-align:center; margin-bottom:15px;">
+                    <div style="font-size:0.8rem; color:#636e72; text-transform:uppercase; letter-spacing:1px;">Total Cost</div>
+                    <div style="font-size:2rem; font-weight:700; color:#2d3436;">${d.cost} <small style="font-size:1rem;">IOTA</small></div>
+                    ${parseFloat(d.debt) > 0 ? `<div style="color:#d63031; font-weight:bold; font-size:0.8rem; margin-top:5px;">Debt Added: ${d.debt}</div>` : ''}
+                </div>
+                
+                <div id="invoice-tx-short" style="text-align:center; color:#b2bec3; font-size:0.7rem; margin-top:10px;">
+                    Transaction ID: ${shortTxId}
+                </div>
+                <div id="invoice-tx-full" style="display:none; text-align:center; color:#2d3436; font-size:0.6rem; word-break:break-all; margin-top:10px; font-family:monospace;">
+                    Transaction ID:<br>${fullTxId}
+                </div>
+            </div>
+
+            <div style="margin-top:10px; margin-bottom:20px; font-size:0.85rem; text-align:center;">
+               ${d.explorerUrl 
+                   ? `<a href="${d.explorerUrl}" target="_blank" class="btn secondary" style="display:block; width:100%; text-decoration:none; color:#2d3436; margin-bottom:10px;">🔎 View Transaction on Tangle</a>` 
+                   : '<span style="color:#b2bec3;">Transaction pending or off-chain</span>'}
+               
+               <button onclick="downloadInvoice()" class="btn secondary" style="background:#dfe6e9; color:#2d3436; margin-bottom:10px;">📥 Download PDF</button>
+            </div>
+
+            <button onclick="resetAppAndHome()" class="btn primary">BACK TO HOME</button>
         `;
 
         refreshBalance();
     } else {
-        box.innerHTML = `<h3 style="color:#ff7675">Errore</h3><p>${res.data.error}</p><button onclick="showView('home')" class="btn secondary">Home</button>`;
+        box.innerHTML = `<h3 style="color:#ff7675">Error</h3><p>${res.data.error}</p><button onclick="showView('home')" class="btn secondary">Home</button>`;
     }
+}
+
+// Function to generate PDF with FULL DETAILS
+function downloadInvoice() {
+    const element = document.getElementById('invoice-content');
+    const shortTx = document.getElementById('invoice-tx-short');
+    const fullTx = document.getElementById('invoice-tx-full');
+
+    // 1. Swap visibility: Hide Short, Show Full
+    if(shortTx) shortTx.style.display = 'none';
+    if(fullTx) fullTx.style.display = 'block';
+
+    const opt = {
+      margin:       10,
+      filename:     `Synap_Invoice_${Date.now()}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'mm', format: 'a6', orientation: 'portrait' } 
+    };
+    
+    // 2. Generate PDF
+    html2pdf().set(opt).from(element).save().then(() => {
+        // 3. Swap back: Show Short, Hide Full
+        if(shortTx) shortTx.style.display = 'block';
+        if(fullTx) fullTx.style.display = 'none';
+    });
 }
 
 function resetAppAndHome() {
@@ -358,8 +365,6 @@ function resetAppAndHome() {
     scanMode = 'START';
     selectedPassengers = 1;
     if(document.getElementById('passenger-count-display')) document.getElementById('passenger-count-display').innerText = "1";
-    
-    // Aggiorna bottoni quando torni alla home
     updateHomeButtons();
 }
 
@@ -369,33 +374,15 @@ document.addEventListener('DOMContentLoaded', () => {
         currentUser = user; 
         updateUIProfile(); 
         
-        // Recupera ID viaggio se c'era un refresh pagina mentre viaggiavi
         const savedTripId = localStorage.getItem('synap_trip_id');
         if(savedTripId) {
             currentTripId = savedTripId;
-            // Opzionale: potresti voler rimandare direttamente alla vista 'trip' se stava viaggiando
         }
 
         showView('home'); 
         refreshBalance(); 
         syncPrice();
-        updateHomeButtons(); // <--- IMPORTANTE: Chiama al caricamento
-    } else {
-        showView('login');
-    }
-    
-    const l = document.getElementById('login-form'); if(l) l.addEventListener('submit', handleLogin);
-    const r = document.getElementById('register-form'); if(r) r.addEventListener('submit', handleRegister);
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    const user = localStorage.getItem('synap_user');
-    if (user) { 
-        currentUser = user; 
-        updateUIProfile(); 
-        showView('home'); 
-        refreshBalance(); 
-        syncPrice();
+        updateHomeButtons();
     } else {
         showView('login');
     }

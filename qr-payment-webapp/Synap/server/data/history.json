@@ -217,5 +217,104 @@
     "startTime": "3:43:21 PM",
     "endTime": "3:43:43 PM",
     "date": "2026-02-11T14:43:43.578Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.05",
+    "paid": "0.05",
+    "status": "FULL",
+    "tx": "2KZzbmfvwd8FyzmJnNibhBb5kd57WF6ZrKC2QYAdTeah",
+    "startTime": "11:19:23 AM",
+    "endTime": "11:20:11 AM",
+    "date": "2026-02-12T10:20:11.959Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.02",
+    "paid": "0.02",
+    "status": "FULL",
+    "tx": "7UTuhFA6FSxRuuJkts368bTNsE3tsDZMDnVeGc9GPA3j",
+    "startTime": "11:34:00 AM",
+    "endTime": "11:34:19 AM",
+    "date": "2026-02-12T10:34:19.640Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.01",
+    "paid": "0.01",
+    "status": "FULL",
+    "tx": "8o8LpPKWJeseNqeSEMo58kvsDUe6y3pDd6MGZQqza2QH",
+    "startTime": "4:24:25 PM",
+    "endTime": "4:24:39 PM",
+    "date": "2026-02-12T15:24:40.814Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.01",
+    "paid": "0.01",
+    "status": "FULL",
+    "tx": "7TSqznJTbSn4U6kzYuvGC96NadTyX2REFENReGfPKEJE",
+    "startTime": "4:38:22 PM",
+    "endTime": "4:38:34 PM",
+    "date": "2026-02-12T15:38:35.470Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Cuneo - Milano",
+    "cost": "10.89",
+    "paid": "9.87",
+    "status": "PARTIAL/DEBT",
+    "tx": "FCRNubfErfjeVwVsXBSx9bi3TUJwpvg8EcgY84go7146",
+    "startTime": "4:39:28 PM",
+    "endTime": "4:41:17 PM",
+    "date": "2026-02-12T15:41:18.570Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.03",
+    "paid": "0.03",
+    "status": "FULL",
+    "tx": "5WqsZZnr7vg3P772hKmxS47WegewgzzvsF8c8RQceoV3",
+    "startTime": "4:49:48 PM",
+    "endTime": "4:50:19 PM",
+    "date": "2026-02-12T15:50:20.454Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.01",
+    "paid": "0.01",
+    "status": "FULL",
+    "tx": "BHmH6W25W92gaDguieQAgG8D2vT4w52otRpfv61RoHga",
+    "startTime": "4:56:17 PM",
+    "endTime": "4:56:28 PM",
+    "date": "2026-02-12T15:56:30.543Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Cuneo - Milano",
+    "cost": "2.50",
+    "paid": "2.50",
+    "status": "FULL",
+    "tx": "FxKFvffvaXCvALFVyHJ8C7ojdBjAgDnvMX3vCuUxQzDf",
+    "startTime": "5:15:31 PM",
+    "endTime": "5:15:39 PM",
+    "date": "2026-02-12T16:15:41.184Z"
+  },
+  {
+    "user": "damiano",
+    "route": "Cuneo - Milano",
+    "cost": "1.60",
+    "paid": "1.60",
+    "status": "FULL",
+    "tx": "ZBoobVQHY6oABnUSAhVTc7w5fvhvt14CmTK3ZgsfXgX",
+    "startTime": "5:26:16 PM",
+    "endTime": "5:26:23 PM",
+    "date": "2026-02-12T16:26:24.906Z"
   }
 ]

@@ -11,17 +11,16 @@
         /* --- ADMIN SPECIFIC STYLES --- */
         body { 
             overflow-y: auto; 
-            background-color: #f8f9fa; /* Sfondo leggermente grigio per contrasto */
+            background-color: #f8f9fa;
         }
         
         main { 
-            max-width: 1400px; /* Più largo per desktop */
+            max-width: 1400px;
             margin: 0 auto;
             padding: 100px 40px 40px 40px; 
-            display: block; /* Override flex del main css */
+            display: block;
         }
 
-        /* Top Cards Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -56,15 +55,13 @@
             margin-top: 5px;
         }
 
-        /* Layout a due colonne per Config e Rotte */
         .management-grid {
-    display: grid;
-    grid-template-columns: 1fr; /* Una sola colonna per il Route Manager */
-    gap: 25px;
-    margin-bottom: 40px;
-}
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
 
-        /* Tabelle */
         .table-section {
             background: white;
             border-radius: 20px;
@@ -99,19 +96,16 @@
         tr td:first-child { border-top-left-radius: 15px; border-bottom-left-radius: 15px; border-left: 1px solid #f1f2f6; }
         tr td:last-child { border-top-right-radius: 15px; border-bottom-right-radius: 15px; border-right: 1px solid #f1f2f6; }
         
-        /* Badges */
         .badge { padding: 6px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
         .badge-green { background: #dff9fb; color: #6ab04c; }
         .badge-red { background: #ffecec; color: #d63031; }
         .badge-purple { background: #f3e5f5; color: #9c27b0; }
         .badge-blue { background: #e3f2fd; color: #2196f3; }
 
-        /* Form Elements overrides */
         input { background: #f8f9fa; border: 1px solid #e9ecef; }
         .config-row { display: flex; gap: 15px; align-items: center; }
         .btn-small { padding: 8px 16px; font-size: 0.8rem; width: auto; margin: 0; }
         
-        /* Routes List Item */
         .route-item { 
             display: flex; 
             justify-content: space-between; 
@@ -127,10 +121,8 @@
             border: 1px solid #90caf9;
         }
 
-        /* Footer */
         .admin-footer { text-align: center; color: #b2bec3; margin-top: 50px; font-size: 0.8rem; }
 
-        /* Responsive override */
         @media (max-width: 1000px) {
             .management-grid { grid-template-columns: 1fr; }
         }
@@ -152,7 +144,7 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" id="stat-pax">0</div>
-                <div class="stat-label">Live Passengers</div>
+                <div class="stat-label">Total Passengers</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="stat-rate">0.00</div>
@@ -165,16 +157,6 @@
         </div>
 
         <div class="management-grid">
-            
-            <!--div class="table-section" style="margin-bottom: 0;">
-                <h2>⚙️ Quick Rate Config</h2>
-                <p class="status-text">Manually override the cost per second for the current trip.</p>
-                <div class="config-row">
-                    <input type="number" id="config-cost" step="0.0001" placeholder="0.01" style="flex-grow: 1;">
-                    <button onclick="updateConfig()" class="btn primary" style="width: auto; margin:0;">Update</button>
-                </div>
-            </div-->
-
             <div class="table-section" style="margin-bottom: 0;">
                 <h2>🛣️ Route Manager</h2>
                 <div class="config-row" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f1f2f6;">
@@ -182,8 +164,7 @@
                     <input type="number" id="route-cost" step="0.01" placeholder="Cost" style="width: 100px;">
                     <button onclick="addRoute()" class="btn primary" style="width: auto; margin:0;">+ Add</button>
                 </div>
-                <div id="routes-list" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
-                    </div>
+                <div id="routes-list" style="max-height: 300px; overflow-y: auto; padding-right: 5px;"></div>
             </div>
         </div>
 
@@ -200,8 +181,7 @@
                             <th>Passengers</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
@@ -220,30 +200,30 @@
                             <th>Transaction (TX)</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
-<div class="table-section">
-    <h2>👥 Registered Users & Wallets</h2>
-    <div style="overflow-x: auto;">
-        <table id="users-table">
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Wallet Address</th>
-                    <th>Current Debt</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-    </div>
-</div>
+
+        <div class="table-section">
+            <h2>👥 Registered Users & Wallets</h2>
+            <div style="overflow-x: auto;">
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Wallet Address</th>
+                            <th>Current Debt</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="admin-footer">
-            Synap Ticketing System v2.3.0 &bull; Powered by IOTA Rebased
+            Synap Ticketing System v2.5.0 &bull; Powered by IOTA Rebased
         </div>
 
     </main>
@@ -261,15 +241,13 @@
         }
 
         function renderDashboard(data) {
-            // 1. Stats Cards
-    // Ora usiamo totalPassengers (somma di utente + ospiti) invece della lunghezza dell'array
-    document.getElementById('stat-pax').innerText = data.totalPassengers;
-    document.getElementById('live-count-badge').innerText = data.activeTrips.length; // Qui lasciamo il numero di viaggi/gruppi
-    
-    document.getElementById('stat-rate').innerText = data.config.costPerSecond;
-    document.getElementById('stat-route').innerText = data.config.currentRouteName || "Standard";
+            // Stats
+            document.getElementById('stat-pax').innerText = data.totalPassengers;
+            document.getElementById('live-count-badge').innerText = data.activeTrips.length;
+            document.getElementById('stat-rate').innerText = data.config.costPerSecond;
+            document.getElementById('stat-route').innerText = data.config.currentRouteName || "Standard";
 
-            // 2. Live Table
+            // Live Table
             const liveBody = document.querySelector('#live-table tbody');
             liveBody.innerHTML = '';
             if(data.activeTrips.length === 0) {
@@ -292,11 +270,11 @@
                 });
             }
 
-            // 3. History Table
+            // History Table
             const histBody = document.querySelector('#history-table tbody');
             histBody.innerHTML = '';
             data.history.forEach(h => {
-                let statusBadge = h.status === 'FULL' || h.status === 'CONFIRMED'
+                let statusBadge = h.status.includes('FULL') || h.status.includes('CONFIRMED') || h.status === 'FULL'
                     ? `<span class="badge badge-green">PAID</span>` 
                     : `<span class="badge badge-red">DEBT / PARTIAL</span>`;
                 
@@ -317,19 +295,16 @@
                 histBody.innerHTML += row;
             });
 
-            // 4. Routes List
+            // Routes List
             const routesList = document.getElementById('routes-list');
             routesList.innerHTML = '';
-            
             if(data.routes.length === 0) {
                  routesList.innerHTML = '<p style="text-align:center; color:#b2bec3;">No routes configured.</p>';
             }
-
             data.routes.forEach(r => {
                 const isSelected = r.id === data.config.currentRouteId;
                 const div = document.createElement('div');
                 div.className = `route-item ${isSelected ? 'active-route' : ''}`;
-                
                 div.innerHTML = `
                     <div>
                         <div style="font-weight: 700; color: var(--text-dark);">${r.name}</div>
@@ -345,17 +320,6 @@
         }
 
         // --- ACTIONS ---
-        async function updateConfig() {
-            const cost = document.getElementById('config-cost').value;
-            if(!cost) return alert("Enter a value");
-            await fetch(`${API_URL}/admin/config`, {
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ costPerSecond: cost })
-            });
-            fetchDashboard();
-            document.getElementById('config-cost').value = '';
-        }
-
         async function addRoute() {
             const name = document.getElementById('route-name').value;
             const cost = document.getElementById('route-cost').value;
@@ -388,55 +352,53 @@
             const s = (seconds % 60).toString().padStart(2,'0');
             return `${m}:${s}`;
         }
-// --- USER MANAGEMENT ---
-async function fetchUsers() {
-    try {
-        const res = await fetch(`${API_URL}/admin/users`);
-        const users = await res.json();
-        
-        const tbody = document.querySelector('#users-table tbody');
-        tbody.innerHTML = '';
-        
-        users.forEach(u => {
-            const row = `
-                <tr>
-                    <td>
-                        <div style="font-weight: 700;">${u.name}</div>
-                        <div style="font-size: 0.8rem; color: #b2bec3;">${u.email}</div>
-                    </td>
-                    <td style="font-family: monospace; color: #636e72; font-size: 0.85rem;">
-                        ${u.address}
-                    </td>
-                    <td>
-                        ${u.debt > 0 
-                            ? `<span class="badge badge-red">${u.debt} IOTA</span>` 
-                            : `<span class="badge badge-green">0.00</span>`}
-                    </td>
-                    <td>
-                        <button onclick="copyToClipboard('${u.address}')" class="btn secondary btn-small">📋 Copy</button>
-                    </td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    } catch (e) { console.error("Error fetching users", e); }
-}
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert("Wallet address copied! Go to Faucet.");
-    });
-}
+        // --- USER MANAGEMENT ---
+        async function fetchUsers() {
+            try {
+                const res = await fetch(`${API_URL}/admin/users`);
+                const users = await res.json();
+                const tbody = document.querySelector('#users-table tbody');
+                tbody.innerHTML = '';
+                users.forEach(u => {
+                    const row = `
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700;">${u.name}</div>
+                                <div style="font-size: 0.8rem; color: #b2bec3;">${u.email}</div>
+                            </td>
+                            <td style="font-family: monospace; color: #636e72; font-size: 0.85rem;">
+                                ${u.address}
+                            </td>
+                            <td>
+                                ${u.debt > 0 
+                                    ? `<span class="badge badge-red">${u.debt} IOTA</span>` 
+                                    : `<span class="badge badge-green">0.00</span>`}
+                            </td>
+                            <td>
+                                <button onclick="copyToClipboard('${u.address}')" class="btn secondary btn-small">📋 Copy</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (e) { console.error("Error fetching users", e); }
+        }
 
-// Aggiorna il setInterval esistente per includere anche gli utenti
-setInterval(() => {
-    fetchDashboard();
-    fetchUsers(); // <--- AGGIUNGI QUESTO
-}, 2000);
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Wallet address copied! Go to Faucet.");
+            });
+        }
 
-// Initial Load
-fetchDashboard();
-fetchUsers(); // <--- AGGIUNGI QUESTO
+        setInterval(() => {
+            fetchDashboard();
+            fetchUsers(); 
+        }, 2000);
+
+        // Initial Load
+        fetchDashboard();
+        fetchUsers(); 
     </script>
 </body>
 </html>

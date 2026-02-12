@@ -13,6 +13,7 @@
     "name": "damiano",
     "mnemonic": "india papa oscar india fig delta echo november sierra tango cherry elderberry",
     "address": "0x4271bb60100d6a560c69eb15ca935debae1a1ed6443db4fa881f32e2703964d1",
-    "debt": 0
+    "debt": 0,
+    "lockedBalance": 0
   }
 ]
