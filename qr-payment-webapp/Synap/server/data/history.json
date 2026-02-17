@@ -316,5 +316,133 @@
     "startTime": "5:26:16 PM",
     "endTime": "5:26:23 PM",
     "date": "2026-02-12T16:26:24.906Z"
+  },
+  {
+    "id": "TRIP-1771318584243",
+    "user": "damiano",
+    "route": "Standard Urban Route",
+    "cost": "0.07",
+    "paid": "0.07",
+    "duration": 14,
+    "date": "2026-02-17T08:56:38.651Z",
+    "tx": "simulated_tx_hash_1771318598651"
+  },
+  {
+    "id": "TRIP-1771318607616",
+    "user": "damiano",
+    "route": "Standard Urban Route",
+    "cost": "0.03",
+    "paid": "0.03",
+    "duration": 12,
+    "date": "2026-02-17T08:56:59.880Z",
+    "tx": "simulated_tx_hash_1771318619880"
+  },
+  {
+    "id": "TRIP-1771321241143",
+    "user": "damiano",
+    "route": "Cuneo - Milano",
+    "cost": "0.01",
+    "paid": "0.01",
+    "status": "FULL",
+    "duration": 10,
+    "date": "2026-02-17T09:40:51.130Z",
+    "tx": "sim_tx_1771321251130"
+  },
+  {
+    "id": "TRIP-1771321262700",
+    "user": "damiano",
+    "route": "Cuneo - Milano",
+    "cost": "0.01",
+    "paid": "0.01",
+    "status": "FULL",
+    "duration": 8,
+    "date": "2026-02-17T09:41:11.289Z",
+    "tx": "sim_tx_1771321271289"
+  },
+  {
+    "id": "TRIP-1771321894722",
+    "user": "damiano",
+    "route": "Cuneo - Milano",
+    "cost": "0.03",
+    "paid": "0.03",
+    "status": "FULL",
+    "duration": 6,
+    "date": "2026-02-17T09:51:41.215Z",
+    "tx": "sim_tx_1771321901215"
+  },
+  {
+    "id": "TRIP-1771321911466",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.02",
+    "paid": "0.02",
+    "status": "FULL",
+    "duration": 8,
+    "date": "2026-02-17T09:51:59.441Z",
+    "tx": "sim_tx_1771321919441"
+  },
+  {
+    "id": "TRIP-1771324617939",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.09",
+    "paid": "0.09",
+    "status": "FULL",
+    "duration": 9,
+    "date": "2026-02-17T10:37:06.826Z",
+    "tx": "sim_tx_1771324626826"
+  },
+  {
+    "id": "TRIP-1771336788901",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "5.83",
+    "paid": "5.83",
+    "status": "FULL",
+    "duration": 583,
+    "date": "2026-02-17T14:09:33.097Z",
+    "tx": "sim_tx_1771337373097"
+  },
+  {
+    "id": "TRIP-1771338406644",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.07",
+    "paid": "0.07",
+    "status": "FULL",
+    "duration": 7,
+    "date": "2026-02-17T14:26:55.158Z",
+    "tx": "sim_tx_1771338415158"
+  },
+  {
+    "id": "TRIP-1771341019785",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.08",
+    "paid": "0.08",
+    "duration": 8,
+    "date": "2026-02-17T15:10:29.547Z",
+    "tx": "iota_tx_1771341029547"
+  },
+  {
+    "id": "TRIP-1771346798740",
+    "user": "damiano",
+    "route": "Cuneo - Milano",
+    "cost": "0.63",
+    "paid": "0.00",
+    "duration": 25,
+    "date": "2026-02-17T16:47:05.275Z",
+    "tx": "iota_tx_1771346825275"
+  },
+  {
+    "id": "TRIP-1771348663745",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.10",
+    "paid": "0.10",
+    "status": "FULL",
+    "duration": 10,
+    "date": "2026-02-17T17:17:55.027Z",
+    "tx": "iota_tx_1771348675027"
   }
 ]

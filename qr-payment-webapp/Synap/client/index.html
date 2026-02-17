@@ -6,22 +6,60 @@
     <title>Synap App</title>
     
     <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
     <script src="js/app.js" defer></script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; margin: 0; background-color: #f0f2f5; overflow-x: hidden; }
+        main { display: flex; flex-direction: column; min-height: calc(100vh - 70px); padding: 20px; box-sizing: border-box; }
+        
+        /* HEADER */
+        .topbar { display:flex; justify-content:space-between; align-items:center; padding:15px 25px; background:white; height:70px; box-shadow:0 2px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; }
+        .brand { color:#2d3436; font-weight:700; font-size:1.2rem; }
+        .logo-icon { color:#a18cd1; margin-right: 5px; }
+        .user-name { font-weight:600; color:#636e72; margin-right:10px; }
+        .btn-logout { background:#f1f2f6; border:none; padding:5px 12px; border-radius:20px; font-size:0.8rem; cursor:pointer; }
+
+        /* VIEWS */
+        .view { display: none; flex-grow: 1; flex-direction: column; }
+        .view.active { display: flex; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CARDS */
+        .card { background: white; border-radius: 20px; padding: 30px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; width: 100%; max-width: 400px; align-self: center; box-sizing: border-box; }
+
+        /* SCANNER */
+        #scanner-container { width: 100%; max-width: 300px; aspect-ratio: 1; margin: 0 auto 25px auto; border-radius: 20px; overflow: hidden; background: #000; position: relative; }
+        #reader { width: 100% !important; height: 100% !important; object-fit: cover; border: none !important; }
+        #passenger-selection-box { background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; width: fit-content; align-self: center; }
+
+        /* BUTTONS */
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .btn.primary { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: white; }
+        .btn.secondary { background: #dfe6e9; color: #2d3436; }
+        .btn.danger { background: #ff7675; color: white; }
+        .link { background: none; border: none; color: #a18cd1; cursor: pointer; margin-top: 10px; text-decoration: underline; }
+
+        /* TEXT UTILS */
+        .balance { font-size: 3.5rem; font-weight: 700; color: #2d3436; line-height: 1; }
+        .currency { font-size: 1rem; color: #636e72; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;}
+        .gradient-text { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #eee; box-sizing: border-box; }
+
+        /* FOOTER & MODAL */
+        .iota-footer { text-align: center; font-size: 0.7rem; color: #b2bec3; margin-top: auto; padding-top: 20px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 300px; width: 90%; text-align: center; }
+    </style>
 </head>
 <body>
 
     <header class="topbar">
-        <div class="brand">
-            <span class="logo-icon">❖</span> Synap
-        </div>
-        <div class="user-profile">
-            <span class="user-name">...</span>
-            <button onclick="handleLogout()" class="btn-logout">Exit</button>
-        </div>
+        <div class="brand"><span class="logo-icon">❖</span> Synap</div>
+        <div class="user-profile"><span class="user-name">...</span><button onclick="handleLogout()" class="btn-logout">Exit</button></div>
     </header>
 
     <main>
@@ -29,16 +67,14 @@
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
                 <div class="card">
                     <h1>Welcome</h1>
-                    <p class="status-text">Your journey, secured by IOTA.</p>
+                    <p style="color:#b2bec3; margin-bottom:20px;">Your journey, secured by IOTA.</p>
                     <form id="login-form">
                         <input type="email" id="email" placeholder="Email" required>
                         <input type="password" id="password" placeholder="Password" required>
                         <button type="submit" class="btn primary">Login</button>
                     </form>
                 </div>
-                <div style="text-align: center;">
-                    <button onclick="showView('register')" class="link">Don't have an account? Sign up</button>
-                </div>
+                <div style="text-align: center;"><button onclick="showView('register')" class="link">Don't have an account? Sign up</button></div>
             </div>
             <div class="iota-footer">Powered by IOTA</div>
         </section>
@@ -46,15 +82,14 @@
         <section id="view-register" class="view">
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
                 <div class="card">
-                    <h1>Create Account</h1>
-                    <p class="status-text">Join Synap</p>
+                    <h1>Join Synap</h1>
                     <form id="register-form">
-                        <input type="text" id="reg-name" placeholder="Your Name" required>
+                        <input type="text" id="reg-name" placeholder="Name" required>
                         <input type="email" id="reg-email" placeholder="Email" required>
                         <input type="password" id="reg-password" placeholder="Password" required>
                         <button type="submit" class="btn primary">Sign Up</button>
                     </form>
-                    <button onclick="showView('login')" class="link" style="margin-top: 15px;">Back to Login</button>
+                    <button onclick="showView('login')" class="link">Back to Login</button>
                 </div>
             </div>
             <div class="iota-footer">Powered by IOTA</div>
@@ -62,132 +97,78 @@
 
         <section id="view-home" class="view">
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                
-                <div class="card" style="padding: 40px 20px;">
-                    <p class="status-text" style="margin-bottom: 5px;">Available Balance</p>
-                    
-                    <div class="balance">
-                        <span id="balance-amount">...</span> 
-                    </div>
+                <div class="card">
+                    <p style="margin-bottom: 5px; font-weight:500; color:#b2bec3;">Available Balance</p>
+                    <div class="balance"><span id="balance-amount">...</span></div>
                     <span class="currency">IOTA</span>
-                    
-                    <div id="locked-balance-info" style="display:none; color: #a18cd1; font-size: 0.85rem; font-weight: 600; margin-top: 10px;">
-                        🔒 0.00 Reserved
-                    </div>
-                    
-                    <div id="debt-warning" style="display: none; margin-top: 25px; animation: fadeIn 0.5s;">
-                        <div style="background: #ffecec; border: 1px solid #fab1a0; border-radius: 15px; padding: 15px;">
-                            <div style="color: #d63031; font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">
-                                ⚠️ DEBT: <span id="debt-amount">0.00</span>
-                            </div>
-                            <p style="font-size: 0.85rem; color: #636e72; margin: 0 0 10px 0;">
-                                You must settle your debt before traveling.
-                            </p>
-                            <button onclick="handlePayDebt()" class="btn danger" id="btn-pay-debt">
-                                PAY DEBT NOW
-                            </button>
+                    <div id="locked-balance-info" style="display:none; background:#f3e5f5; padding:8px; border-radius:10px; color: #8e24aa; font-size: 0.85rem; font-weight: 600; margin-top: 15px;">🔒 0.00 Reserved</div>
+                    <div id="debt-warning" style="display:none; margin-top: 15px; background: #ffecec; border-radius: 12px; padding: 15px; text-align: center;">
+                        <div style="color:#d63031; font-weight:700; margin-bottom: 10px;">
+                            ⚠️ DEBT: <span id="debt-amount">0.00</span> IOTA
                         </div>
+                        <button onclick="payDebt()" class="btn danger" style="padding: 8px 20px; font-size: 0.9rem; margin: 0 auto; display: block; width: auto;">
+                            PAY NOW
+                        </button>
+                    </div>
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #eee;">
+                        <button id="btn-load-id" onclick="loadSynapID()" style="background:none; border: 1px dashed #a18cd1; color: #a18cd1; padding: 10px 20px; border-radius: 10px; cursor:pointer; font-weight:600; width: 100%;">+ Load Synap Trust ID</button>
+                        <div id="identity-info-box" style="display: none; background: #f0f4f8; border-radius: 12px; padding: 15px; margin-top: 10px; border: 1px solid #e1e8ed;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><span style="font-size: 0.7rem; color: #546e7a; text-transform: uppercase; font-weight: 700;">Role</span><span id="display-role" style="font-weight: 700; color: #263238; font-size: 0.9rem;">--</span></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 0.7rem; color: #546e7a; text-transform: uppercase; font-weight: 700;">Discount</span><span id="display-discount" style="background:#e8f5e9; color:#2e7d32; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem;">--</span></div>
+                        </div>
+                        <p id="id-help-text" style="font-size:0.65rem; color:#b2bec3; margin-top:8px;">Verifiable Credential (DID)</p>
                     </div>
                 </div>
-                
-                <button id="btn-scan-start" onclick="startScanner('START')" class="btn primary">
-                    SCAN QR (CHECK-IN)
-                </button>
-                
-                <p id="text-or-scan" style="text-align: center; color: #b2bec3; font-size: 0.8rem; margin-top: 10px; display: none;">
-                    -
-                </p>
-
-                <button id="btn-scan-end" onclick="startScanner('END')" class="btn secondary" style="padding: 10px; display: none;">
-                    QUICK CHECK-OUT
-                </button>
-
+                <button id="btn-scan-start" onclick="startScanner('START')" class="btn primary">SCAN QR (CHECK-IN)</button>
+                <button id="btn-scan-end" onclick="startScanner('END')" class="btn secondary" style="display: none;">QUICK CHECK-OUT</button>
             </div>
             <div class="iota-footer">Powered by IOTA</div>
         </section>
 
         <section id="view-scan" class="view">
-            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px;">
-                
-                <h2 style="text-align: center; margin: 15px 0 10px 0; font-size: 1.1rem; color: #2d3436;">Scan QR Code</h2>
-
-                <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; min-height: 0; margin-bottom: 10px;">
-                    <div id="reader"></div> 
+            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h2 style="margin-bottom: 20px; font-weight:700; color:#2d3436;">Scan QR Code</h2>
+                <div id="scanner-container"><div id="reader"></div></div>
+                <div id="passenger-selection-box">
+                    <button onclick="changePassenger(-1)" class="btn secondary" style="width:40px; height:40px; border-radius:50%; padding:0; font-size:1.2rem; margin:0;">-</button>
+                    <span style="font-size: 0.9rem; color: #636e72;">PASSENGERS: <strong id="passenger-count-display" style="color: #2d3436; font-size: 1.2rem;">1</strong></span>
+                    <button onclick="changePassenger(1)" class="btn secondary" style="width:40px; height:40px; border-radius:50%; padding:0; font-size:1.2rem; margin:0;">+</button>
                 </div>
-
-                <div style="flex-shrink: 0;">
-                    
-                   <div id="passenger-selection-box">
-                        <div style="display: flex; align-items: center; justify-content: center;">
-                            
-                            <button onclick="changePassenger(-1)" class="btn-white-round">-</button>
-                            
-                            <div class="pax-container">
-                                <span class="pax-label">PASSENGERS</span>
-                                <span id="passenger-count-display" class="pax-big-number">1</span>
-                            </div>
-                            
-                            <button onclick="changePassenger(1)" class="btn-white-round">+</button>
-                            
-                        </div>
-                    </div>
-
-                    <div class="input-group-compact">
-                        <input type="text" id="manual-code-input" placeholder="Manual code">
-                        <button onclick="handleManualEntry()" class="btn primary" style="margin-bottom: 5px;">CONFIRM</button>
-                        <button onclick="showView('home')" class="link" style="font-size: 0.8rem;">Cancel</button>
-                    </div>
-
+                <div class="card" style="padding: 15px; margin-top: 10px; width: 100%; max-width: 320px;">
+                    <input type="text" id="manual-code-input" placeholder="Manual Bus Code" style="text-align:center;">
+                    <button onclick="handleManualEntry()" class="btn primary">Confirm</button>
+                    <button onclick="stopScanner(); showView('home');" class="link">Cancel</button>
                 </div>
             </div>
-            <div class="iota-footer" style="padding: 5px 0;">Powered by IOTA</div>
         </section>
 
         <section id="view-trip" class="view">
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <div class="card" style="border: 2px solid #f1f2f6; padding: 40px 20px;">
-                    
-                    <div class="bus-animation">🚌</div>
-                    <h2 style="color: #2d3436; font-weight: 700; margin-bottom: 5px; margin-top: 10px;">ON TRIP</h2>
-                    
-                    <div style="margin-bottom: 30px;">
-                        <p style="margin: 0; font-size: 1rem; color: #636e72; font-weight: 600;">
-                            BUS <span id="trip-id-display" style="color: #a18cd1;">--</span>
-                        </p>
-                        <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #b2bec3;">
-                            Passengers: <strong id="trip-passengers-display" style="color: #2d3436;">1</strong>
-                        </p>
+                <div class="card">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">🚌</div>
+                    <h2 style="font-weight: 800; margin:0; color:#2d3436;">ON TRIP</h2>
+                    <p style="font-size:0.9rem; color:#a18cd1; margin-bottom:20px;">BUS <span id="trip-id-display">--</span></p>
+                    <div class="live-stats">
+                        <p class="gradient-text" style="font-size: 4rem; margin: 10px 0; font-weight:800; color:#2d3436;"><span id="trip-cost">0.00</span></p>
+                        <span style="font-size: 0.8rem; color: #b2bec3; font-weight:600;">TOTAL IOTA</span>
                     </div>
-                    
-                    <div class="live-stats" style="margin: 20px 0;">
-                        <p style="font-size: 4rem; margin: 0; font-weight: 700; line-height: 1;" class="gradient-text">
-                            <span id="trip-cost">0.00</span> 
-                        </p>
-                        <span style="font-size: 1rem; color: #b2bec3;">Total IOTA</span>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.75rem; text-align: left; border-top: 1px dashed #eee; padding-top: 20px; margin-top: 20px;">
+                        <div>Route<br><strong id="trip-route-display" style="font-size:0.9rem; color:#2d3436;">--</strong></div>
+                        <div style="text-align:right;">Rate<br><strong id="trip-rate-display" style="font-size:0.9rem; color:#2d3436;">--</strong></div>
+                        <div>Passengers<br><strong id="trip-passengers-display" style="font-size:0.9rem; color:#2d3436;">1</strong></div>
+                        <div style="text-align:right;">Time<br><strong id="trip-timer" style="font-family:monospace; color:#a18cd1; font-size:0.9rem;">00:00</strong></div>
                     </div>
-
-                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #b2bec3; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f1f2f6;">
-                        <div style="text-align: left;">
-                            <span>Route</span><br>
-                            <strong id="trip-route-display" style="color: #a18cd1;">--</strong>
-                        </div>
-                        <div style="text-align: right;">
-                            <span>Rate</span><br>
-                            <strong id="trip-rate-display" style="color: #636e72;">--</strong> /s
-                        </div>
-                    </div>
-                    
-                    <div id="trip-timer" class="timer" style="display: none;">00:00</div>
                 </div>
-
-                <button onclick="startScanner('END')" class="btn danger" style="padding: 20px; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(255, 154, 158, 0.4);">CHECK-OUT</button>
+                <button onclick="startScanner('END')" class="btn danger">CHECK-OUT</button>
             </div>
             <div class="iota-footer">Powered by IOTA</div>
         </section>
 
         <section id="view-result" class="view">
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <div class="ticket card"></div>
+                <div class="card" style="padding:0; overflow:hidden;">
+                    <div id="invoice-target"></div>
+                </div>
             </div>
             <div class="iota-footer">Powered by IOTA</div>
         </section>
@@ -195,9 +176,9 @@
 
     <div id="custom-modal" class="modal-overlay">
         <div class="modal-content">
-            <div id="modal-icon" class="modal-icon"></div>
-            <div id="modal-title" class="modal-title"></div>
-            <div id="modal-msg" class="modal-msg"></div>
+            <div id="modal-icon" style="font-size:3rem; margin-bottom:10px;"></div>
+            <div id="modal-title" style="font-weight:700; font-size:1.2rem; margin-bottom:10px; color:#2d3436;"></div>
+            <div id="modal-msg" style="color:#636e72; font-size:0.9rem; margin-bottom:20px;"></div>
             <button onclick="closeModal()" class="btn primary">OK</button>
         </div>
     </div>

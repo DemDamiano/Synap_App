@@ -1,0 +1,38 @@
+{
+  "Student": {
+    "label": "50% OFF",
+    "discount": 0.5,
+    "color": "#d63031",
+    "bg": "#ffecec"
+  },
+  "Senior": {
+    "label": "FREE (100%)",
+    "discount": 1.0,
+    "color": "#2e7d32",
+    "bg": "#e8f5e9"
+  },
+  "Resident": {
+    "label": "25% OFF",
+    "discount": 0.25,
+    "color": "#0984e3",
+    "bg": "#dff9fb"
+  },
+  "ResidentStudent": {
+    "label": "65% OFF",
+    "discount": 0.65,
+    "color": "#6c5ce7",
+    "bg": "#a29bfe"
+  },
+  "WorkingEmployee": {
+    "label": "75% OFF",
+    "discount": 0.75,
+    "color": "#2d3436",
+    "bg": "#fdcb6e"
+  },
+  "Standard": {
+    "label": "0%",
+    "discount": 0.0,
+    "color": "#636e72",
+    "bg": "#f1f2f6"
+  }
+}

@@ -1,9 +1,0 @@
-[package]
-name = "Synap "
-version = "0.0.1"
-
-[dependencies]
-Iota = { git = "https://github.com/iotaledger/iota.git", subdir = "crates/iota-framework/packages/iota-framework", rev = "testnet" }
-
-[addresses]
-Synap  = "0x0"

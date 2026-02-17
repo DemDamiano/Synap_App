@@ -1,0 +1,52 @@
+{
+  "0x8d10474212e2680aabeec0472702abd81693ada8c4f3ad1135f39a4d6e9ad2bc": {
+    "role": "Student",
+    "attributes": {
+      "isStudent": true,
+      "isResident": false,
+      "isOver65": false,
+      "isWorkingEmployee": false,
+      "isResidentStudent": false
+    }
+  },
+  "0x0029387dbc1ab7bae1517ffd7ae6a77ac3a8496853380dfc6ccc0944d5d5db84": {
+    "role": "Senior",
+    "attributes": {
+      "isStudent": false,
+      "isResident": false,
+      "isOver65": true,
+      "isWorkingEmployee": false,
+      "isResidentStudent": false
+    }
+  },
+  "0x49615e29c9ab0c9a46f3219442b2de0bde63c8b52507ad5a397e2741baa4b08f": {
+    "role": "Resident",
+    "attributes": {
+      "isStudent": false,
+      "isResident": true,
+      "isOver65": false,
+      "isWorkingEmployee": false,
+      "isResidentStudent": false
+    }
+  },
+  "0x31540051c350e8d7964d57982253362419ada46a8b355235890f5d16c5030bef": {
+    "role": "ResidentStudent",
+    "attributes": {
+      "isStudent": false,
+      "isResident": false,
+      "isOver65": false,
+      "isWorkingEmployee": false,
+      "isResidentStudent": true
+    }
+  },
+  "0x989ca00f8b058fb5d3089fd54c2c2ccf08111a972f9b76cac0f12caa1790b13b": {
+    "role": "WorkingEmployee",
+    "attributes": {
+      "isStudent": false,
+      "isResident": false,
+      "isOver65": false,
+      "isWorkingEmployee": true,
+      "isResidentStudent": false
+    }
+  }
+}

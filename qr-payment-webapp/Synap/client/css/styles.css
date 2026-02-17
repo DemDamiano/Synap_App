@@ -348,3 +348,34 @@ input::placeholder { color: #a4b0be; font-weight: 400; }
 .modal-icon { font-size: 3rem; margin-bottom: 15px; }
 .modal-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; color: var(--text-dark); }
 .modal-msg { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px; font-weight: 400; }
+/* Stile specifico per la Ricevuta/Ticket */
+.ticket { 
+    text-align: left !important; 
+    padding: 0 !important; 
+    overflow: hidden; 
+}
+#invoice-content { 
+    padding: 25px; 
+    background: white; 
+}
+.invoice-header { 
+    text-align: center; 
+    margin-bottom: 20px; 
+    border-bottom: 1.5px dashed #f1f2f6; 
+    padding-bottom: 15px; 
+}
+.invoice-row { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-bottom: 10px; 
+    font-size: 0.9rem; 
+}
+.invoice-row label { color: #b2bec3; font-weight: 600; }
+.invoice-row span { color: #2d3436; font-weight: 700; }
+.total-box { 
+    background: #f8f9fa; 
+    padding: 15px; 
+    border-radius: 12px; 
+    text-align: center; 
+    margin-top: 20px; 
+}

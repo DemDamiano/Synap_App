@@ -8,11 +8,47 @@
     "debt": 0
   },
   {
+    "email": "student@synap.com",
+    "password": "123",
+    "name": "Student",
+    "mnemonic": "oscar bravo bravo whiskey kilo lima date victor papa foxtrot xray kilo",
+    "address": "0x8d10474212e2680aabeec0472702abd81693ada8c4f3ad1135f39a4d6e9ad2bc",
+    "debt": 0,
+    "lockedBalance": 0
+  },
+  {
+    "email": "senior@synap.com",
+    "password": "123",
+    "name": "Senior",
+    "mnemonic": "quebec charlie banana fig golf delta kilo romeo quebec november quebec oscar",
+    "address": "0x0029387dbc1ab7bae1517ffd7ae6a77ac3a8496853380dfc6ccc0944d5d5db84",
+    "debt": 0,
+    "lockedBalance": 0
+  },
+  {
+    "email": "resident@synap.com",
+    "password": "123",
+    "name": "Resident",
+    "mnemonic": "mike victor uniform charlie victor banana zulu kilo apple november zulu whiskey",
+    "address": "0x49615e29c9ab0c9a46f3219442b2de0bde63c8b52507ad5a397e2741baa4b08f",
+    "debt": 0,
+    "lockedBalance": 0
+  },
+  {
+    "email": "resident_student@synap.com",
+    "password": "123",
+    "name": "Resident Student",
+    "mnemonic": "alpha sierra papa tango xray yankee elderberry lima whiskey delta yankee alpha",
+    "address": "0x5db3d99439059169c3a0f1f8f27b3591ec4d354b08f47a3d83c3f5c84112bc88",
+    "debt": 0,
+    "lockedBalance": 0
+  },
+  {
     "email": "damiano.rovella@hotmail.com",
     "password": "123",
     "name": "damiano",
-    "mnemonic": "india papa oscar india fig delta echo november sierra tango cherry elderberry",
-    "address": "0x4271bb60100d6a560c69eb15ca935debae1a1ed6443db4fa881f32e2703964d1",
+    "mnemonic": "delta charlie cherry fig india zulu tango zulu date charlie whiskey golf",
+    "address": "0x989ca00f8b058fb5d3089fd54c2c2ccf08111a972f9b76cac0f12caa1790b13b",
     "debt": 0,
     "lockedBalance": 0
   }

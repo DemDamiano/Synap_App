@@ -13,5 +13,15 @@
     "id": "route-1770750643592",
     "name": "Cuneo - Milano",
     "costPerSecond": 0.1
+  },
+  {
+    "id": "route-1771319203271",
+    "name": "Linea 1 Milano (centro)",
+    "costPerSecond": 0.02
+  },
+  {
+    "id": "route-1771321225419",
+    "name": "Barcellona - Nizza",
+    "costPerSecond": 0.04
   }
 ]
