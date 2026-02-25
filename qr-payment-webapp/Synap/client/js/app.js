@@ -283,7 +283,7 @@ async function payDebt() {
 
     // Mostra loading
     const btn = document.querySelector('#debt-warning button');
-    if(btn) { btn.innerText = "Processing..."; btn.disabled = true; }
+    if(btn) { btn.innerText = "Processed"; btn.disabled = true; }
 
     const res = await apiCall('/user/pay-debt', 'POST', { email });
 
@@ -348,9 +348,12 @@ async function endTrip(qrData) {
     const tripId = currentTripId || localStorage.getItem('synap_trip_id');
     const email = localStorage.getItem('synap_email');
     
+    // RECUPERIAMO L'INDIRIZZO DEL WALLET DIRETTAMENTE DALL'APP
+    const walletAddress = localStorage.getItem('synap_wallet_address'); 
+
     showView('result');
     const target = document.getElementById('invoice-target');
-    target.innerHTML = `<div style="padding:40px; color:#a18cd1;">Processing Transaction...</div>`;
+    target.innerHTML = `<div style="padding:60px; text-align:center;"><div class="loader"></div><p style="color:#a18cd1; font-weight:600; margin-top:20px;">Processing Payment on IOTA Tangle...</p></div>`;
 
     const res = await apiCall('/trip/end', 'POST', { tripId, email });
 
@@ -360,37 +363,68 @@ async function endTrip(qrData) {
         
         const d = res.data || {};
         const cost = d.cost || "0.00";
-        const route = d.routeName || "Standard";
+        const route = d.routeName || "Standard Route";
         const durationSec = d.durationSeconds || 0;
-        const tx = d.explorerUrl ? d.explorerUrl.slice(-15) : "Processing...";
+        const m = Math.floor(durationSec/60).toString().padStart(2,'0');
+        const s = (durationSec%60).toString().padStart(2,'0');
         
-        // Disegno FATTURA
+        const txHash = d.tx || "Processing...";
+        const shortHash = txHash.length > 20 ? txHash.substring(0, 10) + "..." + txHash.substring(txHash.length - 5) : txHash;
+
+        // --- IL NUOVO LINK ALL'EXPLORER PUNTATO SULL'INDIRIZZO DEL WALLET ---
+        const explorerLink = `https://explorer.rebased.iota.org/address/${walletAddress}?network=testnet`;
+
         target.innerHTML = `
-            <div id="invoice-content" style="padding:20px; text-align:left;">
-                <div style="text-align:center; border-bottom:2px dashed #eee; padding-bottom:15px; margin-bottom:15px;">
-                    <h2 style="color:#a18cd1; margin:0;">PAYMENT SUCCESSFUL</h2>
-                    <p style="color:#b2bec3; font-size:0.8rem;">${new Date().toLocaleString()}</p>
-                </div>
+            <div id="invoice-content" style="padding:40px 30px; background:#fff; font-family:'Poppins', sans-serif; color:#2d3436;">
                 
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span style="color:#b2bec3; font-weight:600;">Route</span>
-                    <span style="color:#2d3436; font-weight:700;">${route}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #f1f2f6; padding-bottom:20px; margin-bottom:20px;">
+                    <div>
+                        <h1 style="margin:0; font-size:1.5rem; color:#6c5ce7;">❖ Synap</h1>
+                        <p style="margin:5px 0 0 0; font-size:0.8rem; color:#b2bec3;">Smart Mobility Receipt</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="background:#e3f2fd; color:#0984e3; padding:5px 12px; border-radius:20px; font-size:0.7rem; font-weight:700;">PAID</div>
+                        <p style="margin:5px 0 0 0; font-size:0.7rem; color:#b2bec3;">${new Date().toLocaleString()}</p>
+                    </div>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span style="color:#b2bec3; font-weight:600;">Duration</span>
-                    <span style="color:#2d3436; font-weight:700;">${durationSec}s</span>
+
+                <div style="margin-bottom:30px;">
+                    <p style="font-size:0.8rem; color:#b2bec3; text-transform:uppercase; font-weight:700; letter-spacing:1px; margin-bottom:10px;">Trip Details</p>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
+                        <span style="color:#636e72;">Passenger</span>
+                        <span style="font-weight:600;">${localStorage.getItem('synap_user')}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
+                        <span style="color:#636e72;">Route</span>
+                        <span style="font-weight:600;">${route}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
+                        <span style="color:#636e72;">Duration</span>
+                        <span style="font-weight:600;">${m}m ${s}s</span>
+                    </div>
                 </div>
-                
-                <div style="background:#f8f9fa; padding:20px; border-radius:15px; text-align:center; margin-top:20px;">
-                    <div style="font-size:0.8rem; color:#b2bec3; font-weight:700;">TOTAL COST</div>
-                    <div style="font-size:2.5rem; font-weight:800; color:#2d3436;">${cost} <span style="font-size:1rem;">IOTA</span></div>
+
+                <div style="background:#f8f9fa; border-radius:15px; padding:25px; text-align:center; margin-bottom:30px;">
+                    <p style="margin:0 0 5px 0; font-size:0.75rem; text-transform:uppercase; font-weight:700; color:#b2bec3;">Total Paid</p>
+                    <h2 style="margin:0; font-size:2.5rem; color:#2d3436;">${cost} <span style="font-size:1rem; color:#636e72;">IOTA</span></h2>
                 </div>
-                
-                <div style="margin-top:15px; text-align:center; font-size:0.6rem; color:#b2bec3;">TX: ${tx}</div>
+
+                <div style="border-top:1px dashed #dfe6e9; padding-top:20px;">
+                    <p style="font-size:0.7rem; color:#b2bec3; margin-bottom:5px;">BLOCKCHAIN PROOF (IOTA TANGLE)</p>
+                    <div style="background:#f1f2f6; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <code style="font-size:0.7rem; color:#636e72;">${shortHash}</code>
+                        <a href="${explorerLink}" target="_blank" style="font-size:0.7rem; color:#6c5ce7; text-decoration:none; font-weight:700;">VIEW ON WALLET ↗</a>
+                    </div>
+                    <div style="margin-top:10px; text-align:center;">
+                        <p style="font-size:0.65rem; color:#b2bec3;">Check your wallet address on the IOTA Explorer to verify this transaction.</p>
+                    </div>
+                </div>
             </div>
+
             <div style="padding:20px;">
-                <button onclick="downloadPdf()" class="btn secondary" style="margin-bottom:10px;">📄 Download PDF</button>
-                <button onclick="location.reload()" class="btn primary">Back to Home</button>
+                <button onclick="downloadPdf()" class="btn secondary" style="width:100%; margin-bottom:10px; background:#dfe6e9; color:#2d3436;">📄 Download PDF Receipt</button>
+                <button onclick="location.reload()" class="btn primary" style="width:100%;">Back to Home</button>
             </div>
         `;
         refreshBalance();

@@ -444,5 +444,60 @@
     "duration": 10,
     "date": "2026-02-17T17:17:55.027Z",
     "tx": "iota_tx_1771348675027"
+  },
+  {
+    "id": "TRIP-1771404380114",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.04",
+    "paid": "0.04",
+    "status": "FULL",
+    "duration": 16,
+    "date": "2026-02-18T08:46:38.116Z",
+    "tx": "iota_tx_1771404398116"
+  },
+  {
+    "id": "TRIP-1771431514344",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.03",
+    "paid": "0.03",
+    "status": "FULL",
+    "duration": 10,
+    "date": "2026-02-18T16:18:44.351Z",
+    "tx": "iota_tx_1771431524351"
+  },
+  {
+    "id": "TRIP-1771433832926",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.02",
+    "paid": "0.02",
+    "status": "FULL",
+    "duration": 8,
+    "date": "2026-02-18T16:57:21.768Z",
+    "tx": "iota_tx_1771433841768"
+  },
+  {
+    "id": "TRIP-1772004275141",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.07",
+    "paid": "0.07",
+    "status": "FULL",
+    "duration": 14,
+    "date": "2026-02-25T07:24:49.460Z",
+    "tx": "iota_tx_1772004289460"
+  },
+  {
+    "id": "TRIP-1772006760314",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.08",
+    "paid": "0.08",
+    "status": "FULL",
+    "duration": 8,
+    "date": "2026-02-25T08:06:08.367Z",
+    "tx": "iota_tx_1772006768367"
   }
 ]
