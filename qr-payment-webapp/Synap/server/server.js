@@ -153,13 +153,26 @@ app.post('/api/trip/start', async (req, res) => {
     const user = users.find(u => u.email === email);
     
     if (!user) return res.status(404).json({ error: "User unknown" });
+    
+    // Controllo Debito (Bloccante)
     if (user.debt > 0.01) return res.status(403).json({ error: "DEBT", message: "Pay debt first" });
 
-    const bal = await IotaService.getBalance(user.mnemonic);
-    if (parseFloat(bal.iota) < DEPOSITO_CAUZIONALE) {
-        return res.status(403).json({ error: "FUNDS", message: `Need ${DEPOSITO_CAUZIONALE} IOTA` });
+    // Calcolo corretto dei fondi disponibili (stessa logica del balance endpoint)
+    try {
+        const balData = await IotaService.getBalance(user.mnemonic);
+        const totalRaw = parseFloat(balData.iota);
+        const locked = parseFloat(user.lockedBalance || 0);
+        const availableBalance = totalRaw - locked; // IOTA VERO DISPONIBILE
+
+        if (availableBalance < DEPOSITO_CAUZIONALE) {
+            return res.status(403).json({ error: "FUNDS", message: `Need ${DEPOSITO_CAUZIONALE} IOTA (Available: ${availableBalance.toFixed(2)})` });
+        }
+    } catch (error) {
+        console.error("[TRIP-START] Error checking balance:", error);
+        return res.status(500).json({ error: "BALANCE_ERROR", message: "Could not verify wallet balance" });
     }
 
+    // Se passa i controlli, blocca il deposito
     user.lockedBalance = DEPOSITO_CAUZIONALE;
     DB.write(DB_FILES.users, users);
 
@@ -200,18 +213,29 @@ app.post('/api/trip/end', async (req, res) => {
     
     const bal = await IotaService.getBalance(user.mnemonic);
     const avail = parseFloat(bal.iota);
+    
     let paid = 0;
     let status = "FULL";
+    let transactionId = "pending";
 
     if (avail >= cost) {
         paid = cost;
         status = "FULL";
-        await IotaService.payToBus(user.mnemonic, paid);
+        const txResult = await IotaService.payToBus(user.mnemonic, paid);
+        if (txResult && txResult.blockId) {
+            transactionId = txResult.blockId;
+        }
     } else {
         paid = Math.max(0, avail - 0.01);
         user.debt += (cost - paid);
         status = paid > 0 ? "PARTIAL" : "DEBT_ONLY";
-        if(paid > 0) await IotaService.payToBus(user.mnemonic, paid);
+        
+        if(paid > 0) {
+            const txResult = await IotaService.payToBus(user.mnemonic, paid);
+            if (txResult && txResult.blockId) {
+                transactionId = txResult.blockId;
+            }
+        }
     }
     
     DB.write(DB_FILES.users, users);
@@ -223,10 +247,10 @@ app.post('/api/trip/end', async (req, res) => {
         route: trip.routeName,
         cost: cost.toFixed(2),
         paid: paid.toFixed(2),
-        status: status, // <--- SALVIAMO LO STATO CORRETTO
+        status: status, 
         duration: duration,
         date: new Date().toISOString(),
-        tx: "iota_tx_" + Date.now()
+        tx: transactionId 
     });
     DB.write(DB_FILES.history, history);
 
@@ -242,7 +266,8 @@ app.post('/api/trip/end', async (req, res) => {
         passengers: trip.passengers,
         rate: trip.rate,
         durationSeconds: duration,
-        explorerUrl: "https://explorer.rebased.iota.org/" 
+        tx: transactionId,
+        explorerUrl: `https://explorer.rebased.iota.org/block/${transactionId}?network=testnet`
     });
 });
 
@@ -320,19 +345,34 @@ app.post('/api/user/pay-debt', async (req, res) => {
     } else { res.status(500).json({ error: "Payment Failed" }); }
 });
 
-// --- ADMIN DASHBOARD ---
+// --- ADMIN DASHBOARD (MIGLIORATA PER LIVE TRACKING) ---
 app.get('/api/admin/dashboard', (req, res) => {
     const activeTrips = DB.read(DB_FILES.activeTrips, {});
     const history = DB.read(DB_FILES.history, []);
     const routes = DB.read(DB_FILES.routes, []);
     
-    // Rileggiamo la config dal DISK per essere sicuri
     const currentConfig = DB.read(DB_FILES.config, appConfig);
+    const now = Date.now();
+    let totalPax = 0;
     
-    const activeList = Object.values(activeTrips).map(trip => ({ ...trip, currentCost: "Live" }));
+    // Calcoliamo i costi e la durata in tempo reale per ogni passeggero attivo
+    const activeList = Object.values(activeTrips).map(trip => {
+        const durationSec = Math.floor((now - trip.startTime) / 1000);
+        const liveCost = (durationSec * trip.rate * trip.passengers).toFixed(2);
+        
+        // Aggiungiamo i passeggeri di questo viaggio al totale
+        totalPax += trip.passengers;
+        
+        return { 
+            ...trip, 
+            durationSec: durationSec,
+            currentCost: liveCost 
+        };
+    });
+
     res.json({ 
         activeTrips: activeList, 
-        totalPassengers: 0, 
+        totalPassengers: totalPax, // Totale passeggeri reali sul bus
         history: history.slice().reverse(), 
         routes, 
         config: { 
@@ -361,15 +401,12 @@ app.delete('/api/admin/routes/:id', (req, res) => {
 
 // --- ATTIVAZIONE ROTTA (CONFIG UPDATE) ---
 app.post('/api/admin/config', (req, res) => {
-    console.log("[ADMIN] Activating Route:", req.body); // <--- LOG DI DEBUG
+    console.log("[ADMIN] Activating Route:", req.body); 
 
     appConfig.costPerSecond = parseFloat(req.body.costPerSecond);
     appConfig.currentRouteId = req.body.routeId;
     
-    // Scrittura sincrona per essere certi
     DB.write(DB_FILES.config, appConfig);
-    
-    console.log("[ADMIN] Config Saved:", appConfig); // <--- LOG DI CONFERMA
     res.json({ ok: true });
 });
 
@@ -378,7 +415,7 @@ app.get('/api/admin/users', (req, res) => {
     res.json(users.map(u => ({ name: u.name, email: u.email, address: u.address, debt: u.debt })));
 });
 
-// --- AVVIO SERVER (UNICA VOLTA ALLA FINE) ---
+// --- AVVIO SERVER ---
 app.listen(PORT, () => {
     log(`Server running at http://localhost:${PORT}`, "system");
 });

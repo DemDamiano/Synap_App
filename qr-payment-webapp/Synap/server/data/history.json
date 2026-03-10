@@ -499,5 +499,27 @@
     "duration": 8,
     "date": "2026-02-25T08:06:08.367Z",
     "tx": "iota_tx_1772006768367"
+  },
+  {
+    "id": "TRIP-1772436718446",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.08",
+    "paid": "0.08",
+    "status": "FULL",
+    "duration": 11,
+    "date": "2026-03-02T07:32:10.319Z",
+    "tx": "iota_tx_1772436730319"
+  },
+  {
+    "id": "TRIP-1772455032392",
+    "user": "damiano",
+    "route": "Linea 1 - Centro",
+    "cost": "0.40",
+    "paid": "0.40",
+    "status": "FULL",
+    "duration": 20,
+    "date": "2026-03-02T12:37:33.175Z",
+    "tx": "pending"
   }
 ]
