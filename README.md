@@ -56,10 +56,12 @@ To evaluate the platform, please use the following pre-configured test accounts 
 6. **Blockchain Proof:** A PDF receipt is generated. Click **"VIEW ON WALLET ↗"** to open the official IOTA Rebased Explorer and verify the feeless L1 micro-transaction on the Tangle.
 
 ### Scenario B: The "Certified Debt" Mechanism (Edge Case)
-1. **Login:** Log in using `martina.frazzo@gmail.com`.
-2. **Trip & Debt:** Start a trip and check out. If Martina's balance drops below the trip cost, the system securely flags the remainder as a debt.
-3. **Enforced Block:** Attempt to scan the QR code for a new trip. The system will strictly block access, displaying a red `⚠️ DEBT` warning. 
-4. **Debt Resolution:** Click the "PAY NOW" button. The app will settle the outstanding debt via the IOTA network, immediately unlocking the user's account for future travel.
+1. **Login:** Log in using `martina.frazzo@gmail.com` `damiano.rovella@hotmail.com`
+2. **Password:** `123`
+3. **Trip & Debt:** Start a trip and check out. If Martina's balance drops below the trip cost, the system securely flags the remainder as a debt.
+4. **Enforced Block:** Attempt to scan the QR code for a new trip. The system will strictly block access, displaying a red `⚠️ DEBT` warning. 
+5. **Debt Resolution:** Click the "PAY NOW" button. The app will settle the outstanding debt via the IOTA network, immediately unlocking the user's account for future travel.
 
 ---
+
 *Built with ❤️ for the Masterz x IOTA Hackathon 2026.*
