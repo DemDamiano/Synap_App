@@ -51,5 +51,14 @@
     "address": "0x989ca00f8b058fb5d3089fd54c2c2ccf08111a972f9b76cac0f12caa1790b13b",
     "debt": 0,
     "lockedBalance": 0
+  },
+  {
+    "email": "damianorovella@hotmail.com",
+    "password": "123",
+    "name": "damianorovella",
+    "mnemonic": "delta bravo india hotel yankee whiskey uniform zulu lima elderberry sierra foxtrot",
+    "address": "0xcc3c3a5b0fba800bbcd30abc540c08e872b1324edf8d0cee0cccfdf3a80adec3",
+    "debt": 0,
+    "lockedBalance": 0
   }
 ]

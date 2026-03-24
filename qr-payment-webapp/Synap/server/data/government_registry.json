@@ -48,5 +48,11 @@
       "isWorkingEmployee": true,
       "isResidentStudent": false
     }
+  },
+  "0xcc3c3a5b0fba800bbcd30abc540c08e872b1324edf8d0cee0cccfdf3a80adec3": {
+    "role": "Standard",
+    "attributes": {
+      "isStudent": false
+    }
   }
 }

@@ -521,5 +521,38 @@
     "duration": 20,
     "date": "2026-03-02T12:37:33.175Z",
     "tx": "pending"
+  },
+  {
+    "id": "TRIP-1773146529713",
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.02",
+    "paid": "0.02",
+    "status": "FULL",
+    "duration": 79,
+    "date": "2026-03-10T12:43:29.614Z",
+    "tx": "pending"
+  },
+  {
+    "id": "TRIP-1773323115786",
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.01",
+    "paid": "0.01",
+    "status": "FULL",
+    "duration": 20,
+    "date": "2026-03-12T13:45:38.546Z",
+    "tx": "pending"
+  },
+  {
+    "id": "TRIP-1773779352948",
+    "user": "damiano",
+    "route": "Linea 2 - Centro",
+    "cost": "0.02",
+    "paid": "0.02",
+    "status": "FULL",
+    "duration": 29,
+    "date": "2026-03-17T20:29:42.602Z",
+    "tx": "pending"
   }
 ]
